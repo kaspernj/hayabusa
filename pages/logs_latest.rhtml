@@ -1,0 +1,57 @@
+<%
+  access = _kas.events.call(:check_page_access, {:page => :logs_latest})
+  if !access
+    print _("You do not have access to this page.")
+    exit
+  end
+  
+  ob = _kas.events.call(:ob)
+%>
+
+<table class="list">
+  <thead>
+    <tr>
+      <th><%=_("ID")%></th>
+      <th><%=_("Log")%></th>
+      <%if ob%>
+        <th><%=_("Object")%></th>
+      <%end%>
+    </tr>
+  </thead>
+  <tbody>
+    <%
+      logs = _kas.ob.list(:Log, {
+        "orderby" => [["date_saved", "desc"]],
+        "limit" => 200
+      })
+      
+      logs.each do |log|
+        %>
+          <tr>
+            <td>
+              <a href="logs_show.rhtml?log_id=<%=log.id%>"><%=log.id%></a>
+            </td>
+            <td>
+              <%=log.first_line%>
+            </td>
+            <%if ob%>
+              <td>
+                <%=log.objects_html(ob)%>
+              </td>
+            <%end%>
+          </tr>
+        <%
+      end
+      
+      if logs.empty?
+        %>
+          <tr>
+            <td class="error">
+              <%=_("No logs were found.")%>
+            </td>
+          </tr>
+        <%
+      end
+    %>
+  </tbody>
+</table>

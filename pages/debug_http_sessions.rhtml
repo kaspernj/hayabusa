@@ -1,0 +1,40 @@
+<h1>HTTP sessions</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Key</th>
+      <th>Working</th>
+    </tr>
+  </thead>
+  <tbody>
+    <%
+      sessions = _kas.httpserv.http_sessions.clone
+      
+      sessions.each_index do |key|
+        http_session = sessions[key]
+        
+        %>
+          <tr>
+            <td>
+              <%=key%>
+            </td>
+            <td>
+              <%=Knj::Strings.yn_str(http_session.working)%>
+            </td>
+          </tr>
+        <%
+      end
+      
+      if sessions.empty?
+        %>
+          <tr>
+            <td colspan="2">
+              No HTTP-sessions has been spawned.
+            </td>
+          </tr>
+        <%
+      end
+    %>
+  </tbody>
+</table>

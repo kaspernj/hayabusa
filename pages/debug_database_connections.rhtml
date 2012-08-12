@@ -1,0 +1,46 @@
+<h1>Database connections</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Key</th>
+      <th>Free</th>
+    </tr>
+  </thead>
+  <tbody>
+    <%
+      thread_handler = _kas.db_handler.conns
+      if !thread_handler.is_a?(Knj::Threadhandler)
+        print "A threadhandler has not been spawned for this instance."
+        exit
+      end
+      
+      objects = thread_handler.objects.clone
+      
+      objects.each_index do |key|
+        val = objects[key]
+        
+        %>
+          <tr>
+            <td>
+              <%=key%>
+            </td>
+            <td>
+              <%=Knj::Strings.yn_str(val[:free])%>
+            </td>
+          </tr>
+        <%
+      end
+      
+      if objects.empty?
+        %>
+          <tr>
+            <td colspan="2">
+              Thread handler was spawned but no active connections was spawned?
+            </td>
+          </tr>
+        <%
+      end
+    %>
+  </tbody>
+</table>

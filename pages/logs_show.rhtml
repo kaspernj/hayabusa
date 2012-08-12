@@ -1,0 +1,32 @@
+<%
+  access = _kas.events.call(:check_page_access, {:page => :logs_show})
+  if !access
+    print _("You do not have access to this page.")
+    exit
+  end
+  
+  ob = _kas.events.call(:ob)
+  log = _kas.ob.get(:Log, _get["log_id"])
+%>
+
+<table class="form">
+  <%
+    print Knj::Web.inputs([{
+      :title => _("Date"),
+      :type => :info,
+      :value => Datet.in(log[:date_saved]).out
+    }])
+    
+    if ob
+      print Knj::Web.input(
+        :title => _("Objects"),
+        :type => :info,
+        :value => log.objects_html(ob)
+      )
+    end
+  %>
+</table>
+
+<div style="padding-top: 10px;">
+  <%=log.text%>
+</div>

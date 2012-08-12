@@ -1,0 +1,14 @@
+<%
+  print "Test 1: #{_testvar1}<br />\n"
+  print "Test 2: #{_testvar2}<br />\n"
+%>
+
+<table style="width: 1000px;">
+  <%
+    print Knj::Web.inputs([{
+      :title => "FCKEditor test",
+      :type => :fckeditor,
+      :name => :textest
+    }])
+  %>
+</table>

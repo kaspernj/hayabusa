@@ -1,0 +1,16 @@
+<%
+  if _get["choice"] == "dogarbagecollect"
+    GC.start
+    _kas.redirect("?show=debug_memory_usage")
+  end
+%>
+
+<h1>Memory usage</h1>
+
+<div style="padding-bottom: 15px;">
+  <input type="button" value="Garbage collect" onclick="location.href='?show=debug_memory_usage&amp;choice=dogarbagecollect';" />
+</div>
+
+<%
+  Knj::Memory_analyzer.new.write
+%>
