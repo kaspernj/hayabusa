@@ -1,0 +1,23 @@
+<%
+  print "1"
+  
+  _kas.threadded_content do
+    print "2"
+    sleep 0.5
+  end
+  
+  print "3"
+  
+  _kas.threadded_content do
+    print "4"
+    
+    _kas.threadded_content do
+      print "5"
+      sleep 0.2
+    end
+    
+    sleep 0.3
+  end
+  
+  print "6"
+%>

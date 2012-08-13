@@ -6,7 +6,17 @@ class Hayabusa::Cgi_tools
       post_hash[key] = val.first
     end
     
-    return post_hash
+    post_ret = {}
+    self.convert_post(post_ret, post_hash, {:urldecode => true})
+    
+    return post_ret
+  end
+  
+  #Converts post-result to the right type of hash.
+  def convert_post(seton, post_val, args = {})
+    post_val.each do |varname, value|
+      Knj::Web.parse_name(seton, varname, value, args)
+    end
   end
   
   def env_table

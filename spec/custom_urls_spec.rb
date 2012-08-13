@@ -17,7 +17,7 @@ describe "Hayabusa" do
     )
     
     $appserver = Hayabusa.new(
-      :debug => true,
+      :debug => false,
       :title => "SpecTestCustomUrls",
       :port => 1515,
       :doc_root => "#{File.dirname(__FILE__)}/../lib/pages",

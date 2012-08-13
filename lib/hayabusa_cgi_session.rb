@@ -19,15 +19,7 @@ class Hayabusa::Cgi_session
       :binding_callback => self.method(:create_binding)
     )
     
-    Thread.current[:hayabusa] = {
-      :kas => @kas,
-      :httpsession => self,
-      :session => @session,
-      :get => @get,
-      :post => @post,
-      :meta => @meta,
-      :cookie => @cookie
-    }
+    self.init_thread
     
     
     #Parse URI (page_path and get).
@@ -89,5 +81,41 @@ class Hayabusa::Cgi_session
   #Called from content-group.
   def write(str)
     print str
+  end
+  
+  def threadded_content(block)
+    raise "No block was given." if !block
+    cgroup = Thread.current[:hayabusa][:contentgroup].new_thread
+    
+    Thread.new do
+      begin
+        self.init_thread
+        cgroup.register_thread
+        
+        @kas.db_handler.get_and_register_thread if @kas and @kas.db_handler.opts[:threadsafe]
+        @kas.ob.db.get_and_register_thread if @kas and @kas.ob.db.opts[:threadsafe]
+        
+        block.call
+      rescue Exception => e
+        Thread.current[:hayabusa][:contentgroup].write Knj::Errors.error_str(e, {:html => true})
+        _kas.handle_error(e)
+      ensure
+        Thread.current[:hayabusa][:contentgroup].mark_done
+        @kas.ob.db.free_thread if @kas and @kas.ob.db.opts[:threadsafe]
+        @kas.db_handler.free_thread if @kas and @kas.db_handler.opts[:threadsafe]
+      end
+    end
+  end
+  
+  def init_thread
+    Thread.current[:hayabusa] = {
+      :kas => @kas,
+      :httpsession => self,
+      :session => @session,
+      :get => @get,
+      :post => @post,
+      :meta => @meta,
+      :cookie => @cookie
+    }
   end
 end

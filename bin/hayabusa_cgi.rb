@@ -43,7 +43,9 @@ begin
     :meta => cgi.env_table.to_hash
   }
   if cgi.request_method == "POST"
-    cgi_data[:post] = Hayabusa.convert_fcgi_post(cgi.params)
+    cgi_data[:post] = cgi.convert_fcgi_post(cgi.params)
+  else
+    cgi_data[:post] = {}
   end
   
   #Spawn appserver.
