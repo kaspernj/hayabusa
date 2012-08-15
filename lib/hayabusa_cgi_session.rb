@@ -11,6 +11,12 @@ class Hayabusa::Cgi_session
     cgi_conf = @config[:cgi]
     @get, @post, @meta, @headers = cgi_conf[:get], cgi_conf[:post], cgi_conf[:meta], cgi_conf[:headers]
     
+    if cgi_conf[:cgi]
+      @out = cgi_conf[:cgi]
+    else
+      @out = $stdout
+    end
+    
     @written_size = 0
     @size_send = @config[:size_send]
     
@@ -80,7 +86,7 @@ class Hayabusa::Cgi_session
   
   #Called from content-group.
   def write(str)
-    print str
+    @out.print(str)
   end
   
   def threadded_content(block)

@@ -42,6 +42,8 @@ class Hayabusa::Http_session::Response
     @headers_sent = false
     @headers_trailing = {}
     
+    @mode = args[:mode]
+    
     @headers = {
       "date" => ["Date", Time.now.httpdate]
     }
@@ -133,7 +135,7 @@ class Hayabusa::Http_session::Response
         @socket.write(NL)
       else
         @cgroup.write_to_socket
-        @socket.write("#{NL}#{NL}")
+        @socket.write("#{NL}#{NL}") if @mode != :cgi
       end
     end
     

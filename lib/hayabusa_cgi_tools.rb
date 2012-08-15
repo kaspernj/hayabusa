@@ -7,16 +7,16 @@ class Hayabusa::Cgi_tools
     end
     
     post_ret = {}
-    self.convert_post(post_ret, post_hash, {:urldecode => true})
+    post_hash.each do |varname, value|
+      Knj::Web.parse_name(post_ret, varname, value, :urldecode => true)
+    end
     
     return post_ret
   end
   
   #Converts post-result to the right type of hash.
   def convert_post(seton, post_val, args = {})
-    post_val.each do |varname, value|
-      Knj::Web.parse_name(seton, varname, value, args)
-    end
+    
   end
   
   def env_table

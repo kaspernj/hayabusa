@@ -20,7 +20,7 @@ describe "Hayabusa" do
       :debug => false,
       :title => "SpecTest",
       :port => 1515,
-      :doc_root => "#{File.dirname(__FILE__)}/../lib/pages",
+      :doc_root => "#{File.dirname(__FILE__)}/../pages",
       :locales_gettext_funcs => true,
       :locale_default => "da_DK",
       :db => db
@@ -56,6 +56,13 @@ describe "Hayabusa" do
       "postdata" => "Test post"
     })
     raise "POST-request did not return expected data: '#{res.body}'." if res.body.to_s.strip != "Test post"
+    
+    res = $http.post(:url => "spec.rhtml?choice=dopostconvert", :post => {
+      "postdata" => "Test post",
+      "array" => ["a", "b", "d"]
+    })
+    data = JSON.parse(res.body)
+    raise "Expected posted data restored but it wasnt: '#{data}'." if data["array"]["0"] != "a" or data["array"]["1"] != "b" or data["array"]["2"] != "d"
   end
   
   it "should be able to join the server so other tests can be made manually." do

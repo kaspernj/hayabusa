@@ -39,7 +39,7 @@ begin
   
   cgi_data = {
     :headers => headers,
-    :get => Knj::Web.parse_urlquery(cgi.env_table["QUERY_STRING"], {:urldecode => true, :force_utf8 => true}),
+    :get => Knj::Web.parse_urlquery(cgi.env_table["QUERY_STRING"], :urldecode => true, :force_utf8 => true),
     :meta => cgi.env_table.to_hash
   }
   if cgi.request_method == "POST"

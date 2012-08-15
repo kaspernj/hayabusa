@@ -1,4 +1,6 @@
 <%
+  require "json"
+  
   if _get["choice"] == "test_cookie"
     _kas.cookie(
       "name" => "TestCookie",
@@ -15,6 +17,9 @@
       "value" => "TestValue 3 ",
       "expires" => Time.new + 1200
     )
+    exit
+  elsif _get["choice"] == "dopostconvert"
+    print JSON.generate(_post)
     exit
   end
   
