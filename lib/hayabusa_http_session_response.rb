@@ -139,6 +139,6 @@ class Hayabusa::Http_session::Response
       end
     end
     
-    @socket.close if @close
+    @socket.close if @close and @mode != :cgi
   end
 end

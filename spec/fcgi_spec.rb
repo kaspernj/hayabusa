@@ -7,7 +7,7 @@ describe "Hayabusa" do
     require "json"
     
     Http2.new(:host => "localhost") do |http|
-      res = http.post(:url => "hayabusa_cgi_test/vars_post_test.rhtml", :post => {
+      res = http.post(:url => "hayabusa_fcgi_test/vars_post_test.rhtml", :post => {
         "var" => {
           0 => 1,
           1 => 2,
@@ -31,10 +31,10 @@ describe "Hayabusa" do
       end
       
       
-      res = http.get("hayabusa_cgi_test/threadded_content_test.rhtml")
+      res = http.get("hayabusa_fcgi_test/threadded_content_test.rhtml")
       raise "Expected body to be '123456' but it was: '#{res.body}'." if res.body != "123456"
       
-      res = http.get("hayabusa_cgi_test/vars_get_test.rhtml?var[]=1&var[]=2&var[]=3&var[3][kasper]=5")
+      res = http.get("hayabusa_fcgi_test/vars_get_test.rhtml?var[]=1&var[]=2&var[]=3&var[3][kasper]=5")
       data = JSON.parse(res.body)
       raise "Expected hash to be a certain way: '#{data}'." if data["var"]["0"] != "1" or data["var"]["1"] != "2" or data["var"]["3"]["kasper"] != "5"
     end

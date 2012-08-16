@@ -34,6 +34,7 @@ class Hayabusa::Cgi_session
     http_version = "1.#{match[1]}"
     
     
+    Dir.chdir(@config[:doc_root])
     @page_path = @meta["PATH_TRANSLATED"]
     @ext = File.extname(@page_path).downcase[1..-1].to_s
     

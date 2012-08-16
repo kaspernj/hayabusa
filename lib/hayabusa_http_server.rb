@@ -1,3 +1,5 @@
+require "socket"
+
 class Hayabusa::Http_server
   attr_accessor :working_count
   attr_reader :kas, :http_sessions, :thread_accept, :thread_restart, :server

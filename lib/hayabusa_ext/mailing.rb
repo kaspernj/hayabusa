@@ -1,3 +1,5 @@
+require "monitor"
+
 class Hayabusa
   attr_reader :mails_waiting
   

@@ -1,8 +1,6 @@
 require "base64"
 require "digest"
-require "monitor"
 require "stringio"
-require "socket"
 require "timeout"
 
 #The class that stands for the whole appserver / webserver.

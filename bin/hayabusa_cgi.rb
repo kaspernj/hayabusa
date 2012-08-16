@@ -14,7 +14,11 @@ begin
   require "knjrbfw"
   
   #Spawn CGI-variable to emulate FCGI part.
-  cgi = Hayabusa::Cgi_tools.new
+  cgi_tools = Hayabusa::Cgi_tools.new
+  
+  require "cgi"
+  cgi = CGI.new
+  cgi_tools.cgi = cgi
   
   #print "Content-Type: text/html\r\n"
   #print "\r\n"
@@ -30,7 +34,7 @@ begin
   
   #The rest is copied from the FCGI-part.
   headers = {}
-  cgi.env_table.each do |key, val|
+  cgi_tools.env_table.each do |key, val|
     if key[0, 5] == "HTTP_" and key != "HTTP_HAYABUSA_CGI_CONFIG"
       key = key[5, key.length].gsub("_", " ").gsub(" ", "-")
       headers[key] = val
@@ -39,18 +43,17 @@ begin
   
   cgi_data = {
     :headers => headers,
-    :get => Knj::Web.parse_urlquery(cgi.env_table["QUERY_STRING"], :urldecode => true, :force_utf8 => true),
-    :meta => cgi.env_table.to_hash
+    :get => Knj::Web.parse_urlquery(cgi_tools.env_table["QUERY_STRING"], :urldecode => true, :force_utf8 => true),
+    :meta => cgi_tools.env_table.to_hash
   }
-  if cgi.request_method == "POST"
-    cgi_data[:post] = cgi.convert_fcgi_post(cgi.params)
+  if cgi_tools.request_method == "POST"
+    cgi_data[:post] = cgi_tools.convert_fcgi_post(cgi_tools.params)
   else
     cgi_data[:post] = {}
   end
   
   #Spawn appserver.
   hayabusa_conf = {
-    :doc_root => "",
     :cmdline => false,
     :events => false,
     :cleaner => false,

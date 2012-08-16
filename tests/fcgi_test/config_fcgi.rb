@@ -1,5 +1,6 @@
 Hayabusa::FCGI_CONF = {
   :hayabusa => {
-    :title => "Cgi_test"
+    :title => "Fcgi_test",
+    :doc_root => File.realpath(File.dirname(__FILE__))
   }
 }

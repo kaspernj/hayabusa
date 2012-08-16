@@ -16,15 +16,20 @@ begin
   require "fcgi"
   require "#{File.dirname(Knj::Os.realpath(__FILE__))}/../lib/hayabusa.rb"
   
+  #Spawn CGI-variable to emulate FCGI part.
+  cgi_tools = Hayabusa::Cgi_tools.new
+  
+  #We cant define the Hayabusa-server untuil we receive the first headers, so wait for the first request.
   hayabusa = nil
-  loadfp = "#{File.basename(__FILE__).slice(0..-6)}.rhtml"
   
   FCGI.each_cgi do |cgi|
     begin
-      raise "No HTTP_HAYABUSA_FCGI_CONFIG-header was given." if !cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
-      require cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
+      cgi_tools.cgi = cgi
       
       if !hayabusa
+        raise "No HTTP_HAYABUSA_FCGI_CONFIG-header was given." if !cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
+        require cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
+        
         begin
           conf = Hayabusa::FCGI_CONF
         rescue NameError
@@ -34,12 +39,15 @@ begin
         hayabusa_conf = Hayabusa::FCGI_CONF[:hayabusa]
         hayabusa_conf.merge!(
           :cmdline => false,
-          :mode => :cgi,
-          :doc_root => ""
+          :mode => :cgi
         )
-        
+        hayabusa_conf[:doc_root] = "" if !hayabusa_conf.key?(:doc_root)
         hayabusa = Hayabusa.new(hayabusa_conf)
       end
+      
+      
+      #Enforce $stdout variable.
+      $stdout = hayabusa.cio
       
       
       #The rest is copied from the FCGI-part.
@@ -52,7 +60,9 @@ begin
       end
       
       meta = cgi.env_table.to_hash
-      meta["PATH_TRANSLATED"] = loadfp
+      
+      uri = Knj::Web.parse_uri(meta["REQUEST_URI"])
+      meta["PATH_TRANSLATED"] = File.basename(uri[:path])
       
       cgi_data = {
         :cgi => cgi,
@@ -61,7 +71,7 @@ begin
         :meta => meta
       }
       if cgi.request_method == "POST"
-        cgi_data[:post] = cgi.convert_fcgi_post(cgi.params)
+        cgi_data[:post] = cgi_tools.convert_fcgi_post(cgi.params)
       else
         cgi_data[:post] = {}
       end

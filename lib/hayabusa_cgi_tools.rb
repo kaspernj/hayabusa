@@ -1,4 +1,6 @@
 class Hayabusa::Cgi_tools
+  attr_accessor :cgi
+  
   def convert_fcgi_post(params)
     post_hash = {}
     
@@ -14,11 +16,6 @@ class Hayabusa::Cgi_tools
     return post_ret
   end
   
-  #Converts post-result to the right type of hash.
-  def convert_post(seton, post_val, args = {})
-    
-  end
-  
   def env_table
     return ENV
   end
@@ -29,12 +26,6 @@ class Hayabusa::Cgi_tools
   
   def content_type
     return ENV["CONTENT_TYPE"]
-  end
-  
-  def cgi
-    require "cgi"
-    @cgi = CGI.new if !@cgi
-    return @cgi
   end
   
   def params
