@@ -1,7 +1,7 @@
 class Hayabusa
   #Imports a .rhtml-file and executes it.
   #===Examples
-  #  _kas.import("/some/path/page.rhtml")
+  #  _hb.import("/some/path/page.rhtml")
   def import(filepath)
     if filepath.to_s.index("../proc/self") != nil
       raise Errno::EACCES, "Possible attempt to hack the appserver."
@@ -12,8 +12,8 @@ class Hayabusa
   
   #Redirects to another URL.
   #===Examples
-  #  _kas.redirect("someotherpage.rhtml")
-  #  _kas.redirect("newpage.rhtml", :perm => true)
+  #  _hb.redirect("someotherpage.rhtml")
+  #  _hb.redirect("newpage.rhtml", :perm => true)
   def redirect(url, args = {})
     #Header way
     if !_httpsession.alert_sent and !self.headers_sent?
@@ -32,7 +32,7 @@ class Hayabusa
   
   #Sends a javascript-alert to the HTML.
   #===Examples
-  #  _kas.alert("Hello world!")
+  #  _hb.alert("Hello world!")
   def alert(msg)
     _httpsession.alert_sent = true
     Knj::Web.alert(msg)
@@ -41,7 +41,7 @@ class Hayabusa
   
   #Define a cookies in the clients browser.
   #===Examples
-  #  _kas.cookie(:name => "MyCookie", :value => "Trala")
+  #  _hb.cookie(:name => "MyCookie", :value => "Trala")
   def cookie(cookie)
     raise "No HTTP-session attached to this thread." if !_httpsession
     raise "HTTP-session not active." if !_httpsession.resp
@@ -52,7 +52,7 @@ class Hayabusa
   
   #Sends a header to the clients browser.
   #===Examples
-  #  _kas.header("Content-Type", "text/javascript")
+  #  _hb.header("Content-Type", "text/javascript")
   def header(key, val)
     raise "No HTTP-session attached to this thread." if !_httpsession
     raise "HTTP-session not active." if !_httpsession.resp
@@ -70,7 +70,7 @@ class Hayabusa
   
   #Returns true if the headers are already sent.
   #===Examples
-  #  _kas.headers_sent? #=> true
+  #  _hb.headers_sent? #=> true
   def headers_sent?
     return true if _httpsession.resp.headers_sent
     return false
@@ -79,7 +79,7 @@ class Hayabusa
   #Define the size for when to automatically send headers. If you want to send hundres of kilobytes and then a header, you can use this method to do so.
   #===Examples
   #Set the size to 200 kb.
-  #  _kas.headers_send_size = (1024 * 200)
+  #  _hb.headers_send_size = (1024 * 200)
   def headers_send_size=(newsize)
     raise "The headers are already sent and you cannot modify the send-size any more." if self.headers_sent?
     _httpsession.size_send = newsize.to_i
@@ -88,8 +88,8 @@ class Hayabusa
   
   #Serves the given filepath and enables caching for it. No other content should be written to the page when using this method.
   #===Examples
-  #  _kas.header("Content-Type", "text/javascript")
-  #  _kas.serve_file("somefile.js")
+  #  _hb.header("Content-Type", "text/javascript")
+  #  _hb.serve_file("somefile.js")
   def serve_file(filepath)
     raise "File doesnt exist: '#{filepath}'." if !File.exists?(filepath)
     httpsess = _httpsession
@@ -134,7 +134,7 @@ class Hayabusa
   
   #Urlencodes a string.
   #===Examples
-  #  _kas.redirect("mypage.rhtml?arg=#{_kas.urlenc(value_variable)}")
+  #  _hb.redirect("mypage.rhtml?arg=#{_hb.urlenc(value_variable)}")
   def urlenc(str)
     return Knj::Web.urlenc(str)
   end

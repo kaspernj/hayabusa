@@ -1,12 +1,12 @@
 <%
-  access = _kas.events.call(:check_page_access, {:page => :logs_show})
+  access = _hb.events.call(:check_page_access, {:page => :logs_show})
   if !access
     print _("You do not have access to this page.")
     exit
   end
   
-  ob = _kas.events.call(:ob)
-  log = _kas.ob.get(:Log, _get["log_id"])
+  ob = _hb.events.call(:ob)
+  log = _hb.ob.get(:Log, _get["log_id"])
 %>
 
 <table class="form">

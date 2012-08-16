@@ -60,7 +60,6 @@ begin
     :dbrev => false,
     :mail_require => false,
     :debug => false,
-    :mode => :cgi,
     :cgi => cgi_data,
     :webserver => false
   }

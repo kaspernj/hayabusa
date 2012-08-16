@@ -12,7 +12,7 @@ class Hayabusa::Http_session::Request
   #Sets the various required data on the object. Hayabusa, crlf and arguments.
   def initialize(args)
     @args = args
-    @kas = @args[:kas]
+    @hb = @args[:hb]
     @crlf = "\r\n"
   end
   
@@ -61,15 +61,15 @@ class Hayabusa::Http_session::Request
     uri = Knj::Web.parse_uri(match[2])
     
     page_filepath = Knj::Web.urldec(uri[:path])
-    if page_filepath.length <= 0 or page_filepath == "/" or File.directory?("#{@kas.config[:doc_root]}/#{page_filepath}")
-      page_filepath = "#{page_filepath}/#{@kas.config[:default_page]}"
+    if page_filepath.length <= 0 or page_filepath == "/" or File.directory?("#{@hb.config[:doc_root]}/#{page_filepath}")
+      page_filepath = "#{page_filepath}/#{@hb.config[:default_page]}"
     end
     
-    @page_path = "#{@kas.config[:doc_root]}/#{page_filepath}"
+    @page_path = "#{@hb.config[:doc_root]}/#{page_filepath}"
     @get = Knj::Web.parse_urlquery(uri[:query], {:urldecode => true, :force_utf8 => true})
     
-    if @get["_kas_httpsession_id"]
-      @kas.httpsessions_ids[@get["_kas_httpsession_id"]] = @args[:httpsession]
+    if @get["_hb_httpsession_id"]
+      @hb.httpsessions_ids[@get["_hb_httpsession_id"]] = @args[:httpsession]
     end
     
     begin
@@ -144,8 +144,8 @@ class Hayabusa::Http_session::Request
               sleep 2
             end
           rescue => e
-            if @kas
-              @kas.handle_error(e)
+            if @hb
+              @hb.handle_error(e)
             else
               STDOUT.print Knj::Errors.error_str(e)
             end
@@ -190,8 +190,8 @@ class Hayabusa::Http_session::Request
       @secs_left = nil
       
       #If it doesnt get unset we could have a serious memory reference GC problem.
-      if @get["_kas_httpsession_id"]
-        @kas.httpsessions_ids.delete(@get["_kas_httpsession_id"])
+      if @get["_hb_httpsession_id"]
+        @hb.httpsessions_ids.delete(@get["_hb_httpsession_id"])
       end
     end
   end

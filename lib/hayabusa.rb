@@ -354,7 +354,7 @@ class Hayabusa
   
   #Start a new CGI-request.
   def start_cgi_request
-    @cgi_http_session = Hayabusa::Cgi_session.new(:kas => self)
+    @cgi_http_session = Hayabusa::Cgi_session.new(:hb => self)
   end
   
   #Starts the HTTP-server and threadpool.
@@ -365,7 +365,7 @@ class Hayabusa
     
     
     STDOUT.print "Starting appserver.\n" if @debug
-    Thread.current[:hayabusa] = {:kas => self} if !Thread.current[:hayabusa]
+    Thread.current[:hayabusa] = {:hb => self} if !Thread.current[:hayabusa]
     
     if @config[:autoload]
       STDOUT.print "Autoloading #{@config[:autoload]}\n" if @debug
@@ -487,7 +487,7 @@ class Hayabusa
     
     if !Object.respond_to?(method_name)
       Object.send(:define_method, method_name) do
-        return Thread.current[:hayabusa][:kas].magic_vars[method_name] if Thread.current[:hayabusa] and Thread.current[:hayabusa][:kas]
+        return Thread.current[:hayabusa][:hb].magic_vars[method_name] if Thread.current[:hayabusa] and Thread.current[:hayabusa][:hb]
         raise "Could not figure out the object: '#{method_name}'."
       end
     end
@@ -499,7 +499,7 @@ class Hayabusa
     
     if !Object.respond_to?(method_name)
       Object.send(:define_method, method_name) do
-        return Thread.current[:hayabusa][:kas].magic_procs[method_name].call(:kas => self) if Thread.current[:hayabusa] and Thread.current[:hayabusa][:kas]
+        return Thread.current[:hayabusa][:hb].magic_procs[method_name].call(:hb => self) if Thread.current[:hayabusa] and Thread.current[:hayabusa][:hb]
         raise "Could not figure out the object: '#{method_name}'."
       end
     end

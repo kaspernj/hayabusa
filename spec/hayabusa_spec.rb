@@ -139,7 +139,7 @@ describe "Hayabusa" do
     end
   end
   
-  it "should be able to join threads tarted from _kas.thread." do
+  it "should be able to join threads tarted from _hb.thread." do
     res = $http.get("spec_thread_joins.rhtml")
     raise res.body if res.body.to_s != "12345"
   end

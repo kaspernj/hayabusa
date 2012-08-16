@@ -1,27 +1,27 @@
 <%
-  _kas.threadded_content do
+  _hb.threadded_content do
     sleep 0.2
     print "1"
   end
   
   print "2"
   
-  _kas.threadded_content do
+  _hb.threadded_content do
     sleep 0.1
     
-    _kas.threadded_content do
+    _hb.threadded_content do
       sleep 0.1
       print "3"
       
       sleep 0.1
       
-      _kas.threadded_content do
+      _hb.threadded_content do
         print "4"
         sleep 0.1
         print "5"
       end
       
-      _kas.threadded_content do
+      _hb.threadded_content do
         print "6"
         print "7"
       end
@@ -31,7 +31,7 @@
   end
   
   #This will first finish after the printing has starter - it should still be printed correct.
-  _kas.threadded_content do
+  _hb.threadded_content do
     sleep 1
     print "9"
   end

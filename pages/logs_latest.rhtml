@@ -1,11 +1,11 @@
 <%
-  access = _kas.events.call(:check_page_access, {:page => :logs_latest})
+  access = _hb.events.call(:check_page_access, {:page => :logs_latest})
   if !access
     print _("You do not have access to this page.")
     exit
   end
   
-  ob = _kas.events.call(:ob)
+  ob = _hb.events.call(:ob)
 %>
 
 <table class="list">
@@ -20,7 +20,7 @@
   </thead>
   <tbody>
     <%
-      logs = _kas.ob.list(:Log, {
+      logs = _hb.ob.list(:Log, {
         "orderby" => [["date_saved", "desc"]],
         "limit" => 200
       })

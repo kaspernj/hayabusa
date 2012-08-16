@@ -1,7 +1,7 @@
 #This class handels the HTTP-sessions.
 class Hayabusa::Http_session
   attr_accessor :data, :alert_sent
-  attr_reader :cookie, :get, :headers, :session, :session_id, :session_hash, :kas, :active, :out, :eruby, :browser, :debug, :resp, :page_path, :post, :cgroup, :meta, :httpsession_var, :handler, :working
+  attr_reader :cookie, :get, :headers, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :page_path, :post, :cgroup, :meta, :httpsession_var, :handler, :working
   
   #Autoloader for subclasses.
   def self.const_missing(name)
@@ -14,23 +14,23 @@ class Hayabusa::Http_session
     @data = {}
     @socket = socket
     @httpserver = httpserver
-    @kas = httpserver.kas
-    @types = @kas.types
-    @config = @kas.config
+    @hb = httpserver.hb
+    @types = @hb.types
+    @config = @hb.config
     @active = true
-    @debug = @kas.debug
+    @debug = @hb.debug
     @handlers_cache = @config[:handlers_cache]
     @httpsession_var = {}
     
     @eruby = Knj::Eruby.new(
-      :cache_hash => @kas.eruby_cache,
+      :cache_hash => @hb.eruby_cache,
       :binding_callback => self.method(:create_binding)
     )
     
     #Set socket stuff.
     if RUBY_PLATFORM == "java" or RUBY_ENGINE == "rbx"
-      if @kas.config[:peeraddr_static]
-        addr_peer = [0, 0, @kas.config[:peeraddr_static]]
+      if @hb.config[:peeraddr_static]
+        addr_peer = [0, 0, @hb.config[:peeraddr_static]]
       else
         addr_peer = @socket.peeraddr
       end
@@ -49,8 +49,8 @@ class Hayabusa::Http_session
     }
     
     @resp = Hayabusa::Http_session::Response.new(:socket => @socket)
-    @handler = Hayabusa::Http_session::Request.new(:kas => @kas, :httpsession => self)
-    @cgroup = Hayabusa::Http_session::Contentgroup.new(:socket => @socket, :kas => @kas, :resp => @resp, :httpsession => self)
+    @handler = Hayabusa::Http_session::Request.new(:hb => @hb, :httpsession => self)
+    @cgroup = Hayabusa::Http_session::Contentgroup.new(:socket => @socket, :hb => @hb, :resp => @resp, :httpsession => self)
     @resp.cgroup = @cgroup
     
     Dir.chdir(@config[:doc_root])
@@ -78,7 +78,7 @@ class Hayabusa::Http_session
           @size_send = @config[:size_send]
           @alert_sent = false
           @working = false
-          break if @kas.should_restart
+          break if @hb.should_restart
           
           STDOUT.print "#{__id__} - Waiting to parse from socket.\n" if @debug
           Timeout.timeout(1800) do
@@ -87,12 +87,12 @@ class Hayabusa::Http_session
           
           STDOUT.print "#{__id__} - Done parsing from socket.\n" if @debug
           
-          while @kas.paused? #Check if we should be waiting with executing the pending request.
-            STDOUT.print "#{__id__} - Paused! (#{@kas.paused}) - sleeping.\n" if @debug
+          while @hb.paused? #Check if we should be waiting with executing the pending request.
+            STDOUT.print "#{__id__} - Paused! (#{@hb.paused}) - sleeping.\n" if @debug
             sleep 0.1
           end
           
-          break if @kas.should_restart
+          break if @hb.should_restart
           
           if max_requests_working and @httpserver
             while @httpserver.working_count.to_i >= max_requests_working
@@ -102,8 +102,8 @@ class Hayabusa::Http_session
           end
           
           #Reserve database connections.
-          @kas.db_handler.get_and_register_thread if @kas.db_handler.opts[:threadsafe]
-          @kas.ob.db.get_and_register_thread if @kas.ob.db.opts[:threadsafe]
+          @hb.db_handler.get_and_register_thread if @hb.db_handler.opts[:threadsafe]
+          @hb.ob.db.get_and_register_thread if @hb.ob.db.opts[:threadsafe]
           
           @working = true
           STDOUT.print "#{__id__} - Serving.\n" if @debug
@@ -116,8 +116,8 @@ class Hayabusa::Http_session
           @working = false
           
           #Free reserved database-connections.
-          @kas.db_handler.free_thread if @kas and @kas.db_handler.opts[:threadsafe]
-          @kas.ob.db.free_thread if @kas and @kas.ob.db.opts[:threadsafe]
+          @hb.db_handler.free_thread if @hb and @hb.db_handler.opts[:threadsafe]
+          @hb.ob.db.free_thread if @hb and @hb.ob.db.opts[:threadsafe]
         end
       end
     rescue Timeout::Error
@@ -135,7 +135,7 @@ class Hayabusa::Http_session
   
   #Creates a new Hayabusa::Binding-object and returns the binding for that object.
   def create_binding
-    binding_obj = Hayabusa::Http_session::Page_environment.new(:httpsession => self, :kas => @kas)
+    binding_obj = Hayabusa::Http_session::Page_environment.new(:httpsession => self, :hb => @hb)
     return binding_obj.get_binding
   end
   
@@ -154,24 +154,24 @@ class Hayabusa::Http_session
         self.init_thread
         cgroup.register_thread
         
-        @kas.db_handler.get_and_register_thread if @kas and @kas.db_handler.opts[:threadsafe]
-        @kas.ob.db.get_and_register_thread if @kas and @kas.ob.db.opts[:threadsafe]
+        @hb.db_handler.get_and_register_thread if @hb and @hb.db_handler.opts[:threadsafe]
+        @hb.ob.db.get_and_register_thread if @hb and @hb.ob.db.opts[:threadsafe]
         
         block.call
       rescue Exception => e
         Thread.current[:hayabusa][:contentgroup].write Knj::Errors.error_str(e, {:html => true})
-        _kas.handle_error(e)
+        _hb.handle_error(e)
       ensure
         Thread.current[:hayabusa][:contentgroup].mark_done
-        @kas.ob.db.free_thread if @kas and @kas.ob.db.opts[:threadsafe]
-        @kas.db_handler.free_thread if @kas and @kas.db_handler.opts[:threadsafe]
+        @hb.ob.db.free_thread if @hb and @hb.ob.db.opts[:threadsafe]
+        @hb.db_handler.free_thread if @hb and @hb.db_handler.opts[:threadsafe]
       end
     end
   end
   
   def init_thread
     Thread.current[:hayabusa] = {} if !Thread.current[:hayabusa]
-    Thread.current[:hayabusa][:kas] = @kas
+    Thread.current[:hayabusa][:hb] = @hb
     Thread.current[:hayabusa][:httpsession] = self
     Thread.current[:hayabusa][:session] = @session
     Thread.current[:hayabusa][:get] = @get
@@ -250,16 +250,16 @@ class Hayabusa::Http_session
     elsif @browser["browser"] == "bot"
       @session_id = "bot"
     else
-      @session_id = @kas.session_generate_id(@meta)
+      @session_id = @hb.session_generate_id(@meta)
       send_cookie = true
     end
     
     begin
-      @session, @session_hash = @kas.session_fromid(@ip, @session_id, @meta)
+      @session, @session_hash = @hb.session_fromid(@ip, @session_id, @meta)
     rescue ArgumentError => e
       #User should not have the session he asked for because of invalid user-agent or invalid IP.
-      @session_id = @kas.session_generate_id(@meta)
-      @session, @session_hash = @kas.session_fromid(@ip, @session_id, @meta)
+      @session_id = @hb.session_generate_id(@meta)
+      @session, @session_hash = @hb.session_fromid(@ip, @session_id, @meta)
       send_cookie = true
     end
     
@@ -276,7 +276,7 @@ class Hayabusa::Http_session
       STDOUT.print "Doing access-logging.\n" if @debug
       @ips = [@meta["REMOTE_ADDR"]]
       @ips << @meta["HTTP_X_FORWARDED_FOR"].split(",")[0].strip if @meta["HTTP_X_FORWARDED_FOR"]
-      @kas.logs_access_pending << {
+      @hb.logs_access_pending << {
         :session_id => @session.id,
         :date_request => Time.now,
         :ips => @ips,
@@ -293,9 +293,9 @@ class Hayabusa::Http_session
     time_start = Time.now.to_f if @debug
     
     begin
-      @kas.events.call(:request_begin, :httpsession => self) if @kas.events
+      @hb.events.call(:request_begin, :httpsession => self) if @hb.events
       
-      Timeout.timeout(@kas.config[:timeout]) do
+      Timeout.timeout(@hb.config[:timeout]) do
         if @handlers_cache.key?(@ext)
           STDOUT.print "Calling handler.\n" if @debug
           @handlers_cache[@ext].call(self)
@@ -353,9 +353,9 @@ class Hayabusa::Http_session
     STDOUT.print "#{__id__} - Served '#{@meta["REQUEST_URI"]}' in #{Time.now.to_f - time_start} secs (#{@resp.status}).\n" if @debug
     @cgroup.join
     
-    @kas.events.call(:request_done, {
+    @hb.events.call(:request_done, {
       :httpsession => self
-    }) if @kas.events
+    }) if @hb.events
     @httpsession_var = {}
   end
 end

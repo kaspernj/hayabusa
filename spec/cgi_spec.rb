@@ -37,6 +37,11 @@ describe "Hayabusa" do
       res = http.get("hayabusa_cgi_test/vars_get_test.rhtml?var[]=1&var[]=2&var[]=3&var[3][kasper]=5")
       data = JSON.parse(res.body)
       raise "Expected hash to be a certain way: '#{data}'." if data["var"]["0"] != "1" or data["var"]["1"] != "2" or data["var"]["3"]["kasper"] != "5"
+      
+      
+      
+      res = http.get("hayabusa_cgi_test/vars_header_test.rhtml")
+      raise "Expected header 'testheader' to be 'TestValue' but it wasnt: '#{res.header("testheader")}'." if res.header("testheader") != "TestValue"
     end
   end
 end

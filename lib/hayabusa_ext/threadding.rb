@@ -16,7 +16,7 @@ class Hayabusa
   def thread_init(thread = nil)
     thread = Thread.current if thread == nil
     thread[:hayabusa] = {} if !thread[:hayabusa]
-    thread[:hayabusa][:kas] = self
+    thread[:hayabusa][:hb] = self
   end
   
   #Spawns a new thread with access to magic methods, _db-method and various other stuff in the appserver.
@@ -35,7 +35,7 @@ class Hayabusa
       @db_handler.get_and_register_thread if @db_handler.opts[:threadsafe]
       
       Thread.current[:hayabusa] = {
-        :kas => self,
+        :hb => self,
         :db => @db_handler
       }
       
@@ -65,7 +65,7 @@ class Hayabusa
   #Runs a proc every number of seconds.
   def timeout(args = {}, &block)
     return Hayabusa::Threadding_timeout.new({
-      :kas => self,
+      :hb => self,
       :block => block,
       :args => []
     }.merge(args)).start

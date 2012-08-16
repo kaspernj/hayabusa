@@ -2,11 +2,11 @@ require "socket"
 
 class Hayabusa::Http_server
   attr_accessor :working_count
-  attr_reader :kas, :http_sessions, :thread_accept, :thread_restart, :server
+  attr_reader :hb, :http_sessions, :thread_accept, :thread_restart, :server
   
-  def initialize(kas)
-    @kas = kas
-    @debug = @kas.config[:debug]
+  def initialize(hb)
+    @hb = hb
+    @debug = @hb.config[:debug]
     @mutex_count = Mutex.new
   end
   
@@ -14,16 +14,16 @@ class Hayabusa::Http_server
     @http_sessions = []
     @working_count = 0
     
-    raise "No host was given." if @kas and !@kas.config.has_key?(:host)
-    raise "No port was given." if @kas and !@kas.config.has_key?(:port)
+    raise "No host was given." if @hb and !@hb.config.has_key?(:host)
+    raise "No port was given." if @hb and !@hb.config.has_key?(:port)
     
-    @server = TCPServer.new(@kas.config[:host], @kas.config[:port])
+    @server = TCPServer.new(@hb.config[:host], @hb.config[:port])
     
     @thread_accept = Thread.new do
       loop do
         if !@server or @server.closed?
           STDOUT.puts "Starting TCPServer." if @debug
-          @server = TCPServer.new(@kas.config[:host], @kas.config[:port])
+          @server = TCPServer.new(@hb.config[:host], @hb.config[:port])
         end
         
         begin
@@ -74,7 +74,7 @@ class Hayabusa::Http_server
     @thread_restart = nil
     @server = nil
     @working_count = nil
-    @kas = nil
+    @hb = nil
   end
   
   def spawn_httpsession(socket)
@@ -92,7 +92,7 @@ class Hayabusa::Http_server
       
       yield
     ensure
-      @kas.served += 1 if @kas
+      @hb.served += 1 if @hb
       
       @mutex_count.synchronize do
         @working_count -= 1 if @working_count != nil and added

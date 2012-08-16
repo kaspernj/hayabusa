@@ -9,7 +9,7 @@
   </thead>
   <tbody>
     <%
-      sessions = _kas.httpserv.http_sessions.clone
+      sessions = _hb.httpserv.http_sessions.clone
       
       sessions.each_index do |key|
         http_session = sessions[key]

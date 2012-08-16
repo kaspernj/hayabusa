@@ -22,6 +22,6 @@ class Hayabusa::Erb_handler
   
   #Handels the event when an error in the eruby-instance occurs.
   def on_error(e)
-    _kas.handle_error(e)
+    _hb.handle_error(e)
   end
 end

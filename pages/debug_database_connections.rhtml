@@ -9,7 +9,7 @@
   </thead>
   <tbody>
     <%
-      thread_handler = _kas.db_handler.conns
+      thread_handler = _hb.db_handler.conns
       if !thread_handler.is_a?(Knj::Threadhandler)
         print "A threadhandler has not been spawned for this instance."
         exit

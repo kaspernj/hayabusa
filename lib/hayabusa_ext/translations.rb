@@ -1,7 +1,7 @@
 class Hayabusa
   #Translates a given key for a given object.
   #===Examples
-  # print _kas.trans(obj, :title) #=> "Trala"
+  # print _hb.trans(obj, :title) #=> "Trala"
   def trans(obj, key, args = {})
     args[:locale] = self.trans_locale if !args[:locale]
     trans_val = @translations.get(obj, key, args).to_s
@@ -28,7 +28,7 @@ class Hayabusa
   
   #Sets new translations for the given object.
   #===Examples
-  # _kas.trans_set(obj, {:title => "Trala"})
+  # _hb.trans_set(obj, {:title => "Trala"})
   def trans_set(obj, values, args = {})
     args[:locale] = self.trans_locale if !args[:locale]
     @translations.set(obj, values, args)
@@ -36,7 +36,7 @@ class Hayabusa
   
   #Deletes all translations for the given object.
   #===Examples
-  # _kas.trans_del(obj)
+  # _hb.trans_del(obj)
   def trans_del(obj)
     @translations.delete(obj)
   end

@@ -17,21 +17,21 @@ class Hayabusa::Http_session::Page_environment
   end
   
   def _db
-    return @args[:kas].db_handler
+    return @args[:hb].db_handler
   end
   
   def _get
     return @args[:httpsession].get
   end
   
-  def _kas
-    return @args[:kas]
+  def _hb
+    return @args[:hb]
   end
   
-  alias _requestdata _kas
+  alias _requestdata _hb
   
-  def _kas_vars
-    return @args[:kas].vars
+  def _hb_vars
+    return @args[:hb].vars
   end
   
   def _httpsession

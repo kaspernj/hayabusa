@@ -1,6 +1,6 @@
 class Hayabusa
   def initialize_cleaner
-    #This should not be runned via _kas.timeout because timeout wont run when @should_restart is true! - knj
+    #This should not be runned via _hb.timeout because timeout wont run when @should_restart is true! - knj
     Thread.new(&self.method(:clean_autorestart))
     
     #This flushes (writes) all session-data to the server and deletes old unused sessions from the database.

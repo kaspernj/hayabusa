@@ -1,12 +1,12 @@
 class Hayabusa::Cgi_session
   attr_accessor :data, :alert_sent
-  attr_reader :cookie, :get, :headers, :session, :session_id, :session_hash, :kas, :active, :out, :eruby, :browser, :debug, :resp, :page_path, :post, :cgroup, :meta, :httpsession_var, :handler, :working
+  attr_reader :cookie, :get, :headers, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :page_path, :post, :cgroup, :meta, :httpsession_var, :handler, :working
   
   def initialize(args)
     @args = args
-    @kas = @args[:kas]
+    @hb = @args[:hb]
     
-    @config = @kas.config
+    @config = @hb.config
     @handlers_cache = @config[:handlers_cache]
     cgi_conf = @config[:cgi]
     @get, @post, @meta, @headers = cgi_conf[:get], cgi_conf[:post], cgi_conf[:meta], cgi_conf[:headers]
@@ -21,7 +21,7 @@ class Hayabusa::Cgi_session
     @size_send = @config[:size_send]
     
     @eruby = Knj::Eruby.new(
-      :cache_hash => @kas.eruby_cache,
+      :cache_hash => @hb.eruby_cache,
       :binding_callback => self.method(:create_binding)
     )
     
@@ -42,15 +42,15 @@ class Hayabusa::Cgi_session
     @resp.reset(:http_version => http_version, :mode => :cgi)
     @resp.header("Content-Type", "text/html")
     
-    @cgroup = Hayabusa::Http_session::Contentgroup.new(:socket => self, :kas => @kas, :resp => @resp, :httpsession => self)
+    @cgroup = Hayabusa::Http_session::Contentgroup.new(:socket => self, :hb => @hb, :resp => @resp, :httpsession => self)
     @cgroup.reset
     
     @resp.cgroup = @cgroup
     
     begin
-      @kas.events.call(:request_begin, :httpsession => self) if @kas.events
+      @hb.events.call(:request_begin, :httpsession => self) if @hb.events
       
-      Timeout.timeout(@kas.config[:timeout]) do
+      Timeout.timeout(@hb.config[:timeout]) do
         if @handlers_cache.key?(@ext)
           STDOUT.print "Calling handler.\n" if @debug
           @handlers_cache[@ext].call(self)
@@ -63,9 +63,9 @@ class Hayabusa::Cgi_session
       @cgroup.write_output
       @cgroup.join
       
-      @kas.events.call(:request_done, {
+      @hb.events.call(:request_done, {
         :httpsession => self
-      }) if @kas.events
+      }) if @hb.events
     rescue SystemExit
       #do nothing - ignore.
     rescue Timeout::Error
@@ -76,7 +76,7 @@ class Hayabusa::Cgi_session
   
   #Creates a new Hayabusa::Binding-object and returns the binding for that object.
   def create_binding
-    return Hayabusa::Http_session::Page_environment.new(:httpsession => self, :kas => @kas).get_binding
+    return Hayabusa::Http_session::Page_environment.new(:httpsession => self, :hb => @hb).get_binding
   end
   
   #Is called when content is added and begings to write the output if it goes above the limit.
@@ -99,24 +99,24 @@ class Hayabusa::Cgi_session
         self.init_thread
         cgroup.register_thread
         
-        @kas.db_handler.get_and_register_thread if @kas and @kas.db_handler.opts[:threadsafe]
-        @kas.ob.db.get_and_register_thread if @kas and @kas.ob.db.opts[:threadsafe]
+        @hb.db_handler.get_and_register_thread if @hb and @hb.db_handler.opts[:threadsafe]
+        @hb.ob.db.get_and_register_thread if @hb and @hb.ob.db.opts[:threadsafe]
         
         block.call
       rescue Exception => e
         Thread.current[:hayabusa][:contentgroup].write Knj::Errors.error_str(e, {:html => true})
-        _kas.handle_error(e)
+        _hb.handle_error(e)
       ensure
         Thread.current[:hayabusa][:contentgroup].mark_done
-        @kas.ob.db.free_thread if @kas and @kas.ob.db.opts[:threadsafe]
-        @kas.db_handler.free_thread if @kas and @kas.db_handler.opts[:threadsafe]
+        @hb.ob.db.free_thread if @hb and @hb.ob.db.opts[:threadsafe]
+        @hb.db_handler.free_thread if @hb and @hb.db_handler.opts[:threadsafe]
       end
     end
   end
   
   def init_thread
     Thread.current[:hayabusa] = {
-      :kas => @kas,
+      :hb => @hb,
       :httpsession => self,
       :session => @session,
       :get => @get,

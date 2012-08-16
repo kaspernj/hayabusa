@@ -2,12 +2,12 @@
   print "1"
   
   cont = "2"
-  t1 = _kas.thread do
+  t1 = _hb.thread do
     sleep 0.5
     cont << "4"
   end
   
-  t2 = _kas.thread do
+  t2 = _hb.thread do
     sleep 0.1
     cont << "3"
   end

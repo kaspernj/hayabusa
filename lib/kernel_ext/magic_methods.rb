@@ -42,17 +42,17 @@ def _requestdata
   return Thread.current[:hayabusa] if Thread.current[:hayabusa]
 end
 
-def _kas
-  return Thread.current[:hayabusa][:kas] if Thread.current[:hayabusa]
+def _hb
+  return Thread.current[:hayabusa][:hb] if Thread.current[:hayabusa]
 end
 
 def _vars
-  return Thread.current[:hayabusa][:kas].vars if Thread.current[:hayabusa]
+  return Thread.current[:hayabusa][:hb].vars if Thread.current[:hayabusa]
 end
 
 def _db
   return Thread.current[:hayabusa][:db] if Thread.current[:hayabusa] and Thread.current[:hayabusa][:db] #This is the default use from a .rhtml-file.
-  return Thread.current[:hayabusa][:kas].db_handler if Thread.current[:hayabusa] and Thread.current[:hayabusa][:kas] #This is useually used when using autoload-argument for the appserver.
+  return Thread.current[:hayabusa][:hb].db_handler if Thread.current[:hayabusa] and Thread.current[:hayabusa][:hb] #This is useually used when using autoload-argument for the appserver.
 end
 
 #This function makes it possible to define methods in ERubis-parsed files (else _buf-variable wouldnt be globally available).

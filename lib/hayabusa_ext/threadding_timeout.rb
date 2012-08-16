@@ -3,7 +3,7 @@ class Hayabusa::Threadding_timeout
   
   def initialize(args)
     @args = args
-    @kas = @args[:kas]
+    @hb = @args[:hb]
     raise "No time given." if !@args.key?(:time)
     @mutex = Mutex.new
     @running = false
@@ -28,23 +28,23 @@ class Hayabusa::Threadding_timeout
             
             while @timeout > 0
               @timeout += -1
-              break if @kas.should_restart or !@run
+              break if @hb.should_restart or !@run
               sleep 1
             end
           else
             sleep @args[:time]
           end
           
-          break if @kas.should_restart or !@run
+          break if @hb.should_restart or !@run
           
           @mutex.synchronize do
-            @kas.threadpool.run do
-              @kas.ob.db.get_and_register_thread if @kas.ob.db.opts[:threadsafe]
-              @kas.db_handler.get_and_register_thread if @kas.db_handler.opts[:threadsafe]
+            @hb.threadpool.run do
+              @hb.ob.db.get_and_register_thread if @hb.ob.db.opts[:threadsafe]
+              @hb.db_handler.get_and_register_thread if @hb.db_handler.opts[:threadsafe]
               
               Thread.current[:hayabusa] = {
-                :kas => @kas,
-                :db => @kas.db_handler
+                :hb => @hb,
+                :db => @hb.db_handler
               }
               
               begin
@@ -59,13 +59,13 @@ class Hayabusa::Threadding_timeout
                 end
               ensure
                 @running = false
-                @kas.ob.db.free_thread if @kas.ob.db.opts[:threadsafe]
-                @kas.db_handler.free_thread if @kas.db_handler.opts[:threadsafe]
+                @hb.ob.db.free_thread if @hb.ob.db.opts[:threadsafe]
+                @hb.db_handler.free_thread if @hb.db_handler.opts[:threadsafe]
               end
             end
           end
         rescue => e
-          @kas.handle_error(e)
+          @hb.handle_error(e)
         end
       end
     end

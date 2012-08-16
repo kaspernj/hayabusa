@@ -49,7 +49,6 @@ begin
         hayabusa_conf = Hayabusa::FCGI_CONF[:hayabusa]
         hayabusa_conf.merge!(
           :cmdline => false,
-          :mode => :cgi,
           :port => 0 #Ruby picks random port and we get the actual port after starting the appserver.
         )
         

@@ -28,7 +28,7 @@ class Hayabusa
         sleep 1
       end
       
-      mailobj = Hayabusa::Mail.new({:kas => self, :errors => {}, :status => :waiting}.merge(mail_args))
+      mailobj = Hayabusa::Mail.new({:hb => self, :errors => {}, :status => :waiting}.merge(mail_args))
       STDOUT.print "Added mail '#{mailobj.__id__}' to the mail-send-queue.\n" if debug
       @mails_waiting << mailobj
       self.mail_flush if mail_args[:now]
@@ -94,7 +94,7 @@ class Hayabusa
     def initialize(args)
       @args = args
       
-      raise "No hayabusa-object was given (as :kas)." if !@args[:kas].is_a?(Hayabusa)
+      raise "No hayabusa-object was given (as :hb)." if !@args[:hb].is_a?(Hayabusa)
       raise "No :to was given." if !@args[:to]
       raise "No content was given (:html or :text)." if !@args[:html] and !@args[:text]
     end
@@ -106,19 +106,19 @@ class Hayabusa
     
     #Sends the email to the receiver.
     def send(args = {})
-      STDOUT.print "Sending mail '#{__id__}'.\n" if @args[:kas].debug
+      STDOUT.print "Sending mail '#{__id__}'.\n" if @args[:hb].debug
       
       if @args[:from]
         from = @args[:from]
-      elsif @args[:kas].config[:error_report_from]
-        from = @args[:kas].config[:error_report_from]
+      elsif @args[:hb].config[:error_report_from]
+        from = @args[:hb].config[:error_report_from]
       else
         raise "Dont know where to take the 'from'-paramter from - none given in appserver config or mail-method-arguments?"
       end
       
       if args["proc"]
         args["proc"].static("Object", "require", "knj/mailobj")
-        mail = args["proc"].new("Knj::Mailobj", @args[:kas].config[:smtp_args])
+        mail = args["proc"].new("Knj::Mailobj", @args[:hb].config[:smtp_args])
         mail._pm_send_noret("to=", @args[:to])
         mail._pm_send_noret("subject=", @args[:subject]) if @args[:subject]
         mail._pm_send_noret("html=", Knj::Strings.email_str_safe(@args[:html])) if @args[:html]
@@ -127,7 +127,7 @@ class Hayabusa
         mail._pm_send_noret("send")
       else
         require "knj/mailobj"
-        mail = Knj::Mailobj.new(@args[:kas].config[:smtp_args])
+        mail = Knj::Mailobj.new(@args[:hb].config[:smtp_args])
         mail.to = @args[:to]
         mail.subject = @args[:subject] if @args[:subject]
         mail.html = Knj::Strings.email_str_safe(@args[:html]) if @args[:html]
@@ -137,10 +137,10 @@ class Hayabusa
       end
       
       @args[:status] = :sent
-      STDOUT.print "Sent email #{self.__id__}\n" if @args[:kas].debug
+      STDOUT.print "Sent email #{self.__id__}\n" if @args[:hb].debug
       return true
     rescue => e
-      if @args[:kas].debug
+      if @args[:hb].debug
         STDOUT.print "Could not send email.\n"
         STDOUT.puts e.inspect
         STDOUT.puts e.backtrace

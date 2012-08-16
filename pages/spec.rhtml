@@ -2,17 +2,17 @@
   require "json"
   
   if _get["choice"] == "test_cookie"
-    _kas.cookie(
+    _hb.cookie(
       "name" => "TestCookie",
       "value" => "TestValue",
       "expires" => Time.new + 3600 #add an hour
     )
-    _kas.cookie(
+    _hb.cookie(
       "name" => "TestCookie2",
       "value" => "TestValue2",
       "expires" => Time.new + 7200 #add an hour
     )
-    _kas.cookie(
+    _hb.cookie(
       "name" => "TestCookie3",
       "value" => "TestValue 3 ",
       "expires" => Time.new + 1200
@@ -28,8 +28,8 @@
     exit
   end
   
-  _kas.header("TestHeader", "NormalHeader")
-  _kas.header_raw("TestRaw: RawHeader")
+  _hb.header("TestHeader", "NormalHeader")
+  _hb.header_raw("TestRaw: RawHeader")
   
   if _meta["REQUEST_METHOD"] == "POST"
     print _post["postdata"]
