@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
   s.date = %q{2012-08-16}
-  s.description = %q{TODO: longer description of your gem}
+  s.description = %q{A threadded web/app-server that focuses on threadding, shared ressources, speed and more.}
   s.email = %q{k@spernj.org}
   s.executables = ["check_running.rb", "hayabusa_benchmark.rb", "hayabusa_cgi.rb", "hayabusa_fcgi.fcgi", "hayabusa_fcgi.rb", "knjappserver_start.rb"]
   s.extra_rdoc_files = [
@@ -34,6 +34,7 @@ Gem::Specification.new do |s|
     "bin/knjappserver_start.rb",
     "conf/apache2_cgi_rhtml_conf.conf",
     "conf/apache2_fcgi_rhtml_conf.conf",
+    "hayabusa.gemspec",
     "lib/hayabusa.rb",
     "lib/hayabusa_cgi_session.rb",
     "lib/hayabusa_cgi_tools.rb",
@@ -106,7 +107,7 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.6.2}
-  s.summary = %q{TODO: one-line summary of your gem}
+  s.summary = %q{A threadded web/app-server that supports stand-alone, CGI and FCGI-modes.}
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
