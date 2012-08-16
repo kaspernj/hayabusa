@@ -1,12 +1,11 @@
 #!/usr/bin/ruby
 
-#This scripts start an appserver, executes a HTTP-request for every FCGI-request and terminates when FCGI terminates.
+#This scripts start an appserver, executes a CGI-request for every FCGI-request and terminates when FCGI terminates.
 #Good for programming appserver-supported projects that doesnt need threadding without running an appserver all the time.
 
-#It doesnt support shared threadding or objects because multiple instances in form of processes will be executed.
+debug = false
 
-#Its a bit slower because it needs to flush writes to the database at end of every request and re-read them on spawn, because multiple instances might be present.
-
+$stderr.puts "[hayabusa] Starting up!" if debug
 error_log_file = "/tmp/hayabusa_fcgi.log"
 
 begin
@@ -16,6 +15,7 @@ rescue Errno::ENOENT
 end
 
 begin
+  $stderr.puts "[hayabusa] Loading libs." if debug
   require "rubygems"
   require "knjrbfw"
   require "fcgi"
@@ -29,6 +29,7 @@ begin
   hayabusa = nil
   fcgi_proxy = nil
   
+  $stderr.puts "[hayabusa] Starting FCGI." if debug
   FCGI.each_cgi do |cgi|
     begin
       #cgi.print "Content-Type: text/html\r\n"
@@ -39,12 +40,8 @@ begin
       if !hayabusa
         raise "No HTTP_HAYABUSA_FCGI_CONFIG-header was given." if !cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
         require cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
-        
-        begin
-          conf = Hayabusa::FCGI_CONF
-        rescue NameError
-          raise "No 'Hayabusa::FCGI_CONF'-constant was spawned by '#{cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]}'."
-        end
+        raise "No 'Hayabusa::FCGI_CONF'-constant was spawned by '#{cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if !Hayabusa.const_defined?(:FCGI_CONF)
+        conf = Hayabusa::FCGI_CONF
         
         hayabusa_conf = Hayabusa::FCGI_CONF[:hayabusa]
         hayabusa_conf.merge!(
@@ -100,9 +97,11 @@ begin
       
       if fcgi_proxy
         #Proxy request to the host-FCGI-process.
+        $stderr.puts "[hayabusa] Proxying request." if debug
         cgi_tools.proxy_request_to(:cgi => cgi, :http => fcgi_proxy[:http])
       else
         #Host the FCGI-process.
+        $stderr.puts "[hayabusa] Running request as CGI." if debug
         
         #Enforce $stdout variable.
         $stdout = hayabusa.cio

@@ -43,6 +43,7 @@ class Hayabusa
   #Will make the session rememberable for a year. IP wont be checked any more.
   def session_remember
     session = _httpsession.session
+    raise "Could not get session-variable from HTTP-session." if !session
     session[:remember] = 1
     
     self.cookie(

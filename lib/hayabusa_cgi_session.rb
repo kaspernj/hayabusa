@@ -10,7 +10,43 @@ class Hayabusa::Cgi_session
     @handlers_cache = @config[:handlers_cache]
     cgi_conf = @config[:cgi]
     @get, @post, @meta, @headers = cgi_conf[:get], cgi_conf[:post], cgi_conf[:meta], cgi_conf[:headers]
+    @browser = Knj::Web.browser(@meta)
     
+    #Parse cookies and other headers.
+    @cookie = {}
+    @headers.each do |key, val|
+      #$stderr.puts "Header-Key: '#{key}'."
+      
+      case key
+        when "COOKIE"
+          Knj::Web.parse_cookies(val).each do |key, val|
+            @cookie[key] = val
+          end
+      end
+    end
+    
+    
+    #Set up session-variables.
+    if @cookie["HayabusaSession"].to_s.length > 0
+      @session_id = @cookie["HayabusaSession"]
+    elsif @browser["browser"] == "bot"
+      @session_id = "bot"
+    else
+      @session_id = @hb.session_generate_id(@meta)
+      send_cookie = true
+    end
+    
+    begin
+      @session, @session_hash = @hb.session_fromid(@ip, @session_id, @meta)
+    rescue ArgumentError => e
+      #User should not have the session he asked for because of invalid user-agent or invalid IP.
+      @session_id = @hb.session_generate_id(@meta)
+      @session, @session_hash = @hb.session_fromid(@ip, @session_id, @meta)
+      send_cookie = true
+    end
+    
+    
+    #Set up the 'out', 'written_size' and 'size_send' variables which is used to write output.
     if cgi_conf[:cgi]
       @out = cgi_conf[:cgi]
     else
