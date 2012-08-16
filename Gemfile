@@ -7,11 +7,11 @@ gem "knjrbfw"
 gem "erubis"
 gem "mail"
 gem "datet"
+gem "http2"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
 group :development do
-  gem "http2"
   gem "json"
   gem "rspec", "~> 2.3.0"
   gem "bundler", ">= 1.0.0"

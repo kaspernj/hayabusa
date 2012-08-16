@@ -62,10 +62,10 @@ begin
     :debug => false,
     :mode => :cgi,
     :cgi => cgi_data,
-    :port => 0 #Ruby picks random port and we get the actual port after starting the appserver.
+    :webserver => false
   }
   hayabusa_conf.merge!(Hayabusa::CGI_CONF[:hayabusa]) if Hayabusa::CGI_CONF[:hayabusa]
-  hayabusa = Hayabusa.new(hayabusa_conf).start
+  hayabusa = Hayabusa.new(hayabusa_conf).start_cgi_request
 rescue Exception => e
   print "Content-Type: text/html\r\n"
   print "\n\n"

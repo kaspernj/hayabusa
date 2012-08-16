@@ -352,34 +352,35 @@ class Hayabusa
     return false
   end
   
+  #Start a new CGI-request.
+  def start_cgi_request
+    @cgi_http_session = Hayabusa::Cgi_session.new(:kas => self)
+  end
+  
   #Starts the HTTP-server and threadpool.
   def start
-    if @config[:mode] == :cgi
-      @cgi_http_session = Hayabusa::Cgi_session.new(:kas => self)
-    else
-      #Start the appserver.
-      print "Spawning appserver.\n" if @debug
-      @httpserv = Hayabusa::Http_server.new(self)
-      
-      
-      STDOUT.print "Starting appserver.\n" if @debug
-      Thread.current[:hayabusa] = {:kas => self} if !Thread.current[:hayabusa]
-      
-      if @config[:autoload]
-        STDOUT.print "Autoloading #{@config[:autoload]}\n" if @debug
-        require @config[:autoload]
-      end
-      
-      begin
-        @threadpool.start if @threadpool
-        STDOUT.print "Threadpool startet.\n" if @debug
-        @httpserv.start
-        STDOUT.print "Appserver startet.\n" if @debug
-      rescue Interrupt => e
-        STDOUT.print "Got interrupt - trying to stop appserver.\n" if @debug
-        self.stop
-        raise e
-      end
+    #Start the appserver.
+    print "Spawning appserver.\n" if @debug
+    @httpserv = Hayabusa::Http_server.new(self)
+    
+    
+    STDOUT.print "Starting appserver.\n" if @debug
+    Thread.current[:hayabusa] = {:kas => self} if !Thread.current[:hayabusa]
+    
+    if @config[:autoload]
+      STDOUT.print "Autoloading #{@config[:autoload]}\n" if @debug
+      require @config[:autoload]
+    end
+    
+    begin
+      @threadpool.start if @threadpool
+      STDOUT.print "Threadpool startet.\n" if @debug
+      @httpserv.start
+      STDOUT.print "Appserver startet.\n" if @debug
+    rescue Interrupt => e
+      STDOUT.print "Got interrupt - trying to stop appserver.\n" if @debug
+      self.stop
+      raise e
     end
   end
   
