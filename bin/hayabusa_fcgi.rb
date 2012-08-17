@@ -27,6 +27,7 @@ begin
   
   #We cant define the Hayabusa-server untuil we receive the first headers, so wait for the first request.
   hayabusa = nil
+  hayabusa_fcgi_conf_path = nil
   fcgi_proxy = nil
   
   $stderr.puts "[hayabusa] Starting FCGI." if debug
@@ -35,11 +36,16 @@ begin
       #cgi.print "Content-Type: text/html\r\n"
       #cgi.print "\r\n"
       
+      #Set 'cgi'-variable for CGI-tools.
       cgi_tools.cgi = cgi
+      
+      #Ensure the same FCGI-process isnt active for more than one website.
+      raise "Expected 'HTTP_HAYABUSA_FCGI_CONFIG' to be '#{hayabusa_fcgi_conf_path}' but it wasnt: '#{cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if hayabusa_fcgi_conf_path and hayabusa_fcgi_conf_path != cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
       
       if !hayabusa
         raise "No HTTP_HAYABUSA_FCGI_CONFIG-header was given." if !cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
-        require cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
+        hayabusa_fcgi_conf_path = cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
+        require hayabusa_fcgi_conf_path
         raise "No 'Hayabusa::FCGI_CONF'-constant was spawned by '#{cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if !Hayabusa.const_defined?(:FCGI_CONF)
         conf = Hayabusa::FCGI_CONF
         

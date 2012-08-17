@@ -9,6 +9,7 @@ class Hayabusa::Models::Session < Knj::Datarow
     if self[:sess_data].to_s.length > 0
       begin
         @sess_data = Marshal.load(Base64.decode64(self[:sess_data]))
+        raise "The session-data could not be loaded." if !@sess_data
       rescue ArgumentError
         @sess_data = {}
       end

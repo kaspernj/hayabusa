@@ -101,8 +101,7 @@ class Hayabusa::Database
         "indexes" => [
           {"name" => "date_added", "columns" => ["date_added"]},
           {"name" => "idhash", "columns" => ["idhash"]}
-        ],
-        "renames" => ["sessions"]
+        ]
       },
       "Translation" => {
         "columns" => [
@@ -115,10 +114,7 @@ class Hayabusa::Database
         ],
         "indexes" => [
           {"name" => "lookup", "columns" => ["object_class", "object_id", "key", "locale"]}
-        ],
-        "indexes_remove" => {
-          "object_class" => true
-        }
+        ]
       }
     }
   }

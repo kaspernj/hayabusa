@@ -26,26 +26,6 @@ class Hayabusa::Cgi_session
     end
     
     
-    #Set up session-variables.
-    if @cookie["HayabusaSession"].to_s.length > 0
-      @session_id = @cookie["HayabusaSession"]
-    elsif @browser["browser"] == "bot"
-      @session_id = "bot"
-    else
-      @session_id = @hb.session_generate_id(@meta)
-      send_cookie = true
-    end
-    
-    begin
-      @session, @session_hash = @hb.session_fromid(@ip, @session_id, @meta)
-    rescue ArgumentError => e
-      #User should not have the session he asked for because of invalid user-agent or invalid IP.
-      @session_id = @hb.session_generate_id(@meta)
-      @session, @session_hash = @hb.session_fromid(@ip, @session_id, @meta)
-      send_cookie = true
-    end
-    
-    
     #Set up the 'out', 'written_size' and 'size_send' variables which is used to write output.
     if cgi_conf[:cgi]
       @out = cgi_conf[:cgi]
@@ -72,16 +52,52 @@ class Hayabusa::Cgi_session
     
     Dir.chdir(@config[:doc_root])
     @page_path = @meta["PATH_TRANSLATED"]
+    @page_path = "index.rhtml" if @page_path == "/"
+    
     @ext = File.extname(@page_path).downcase[1..-1].to_s
     
     @resp = Hayabusa::Http_session::Response.new(:socket => self)
     @resp.reset(:http_version => http_version, :mode => :cgi)
-    @resp.header("Content-Type", "text/html")
     
     @cgroup = Hayabusa::Http_session::Contentgroup.new(:socket => self, :hb => @hb, :resp => @resp, :httpsession => self)
     @cgroup.reset
     
     @resp.cgroup = @cgroup
+    @resp.header("Content-Type", "text/html")
+    
+    
+    #Set up session-variables.
+    if @cookie["HayabusaSession"].to_s.length > 0
+      @session_id = @cookie["HayabusaSession"]
+    elsif @browser["browser"] == "bot"
+      @session_id = "bot"
+    else
+      @session_id = @hb.session_generate_id(@meta)
+      send_cookie = true
+    end
+    
+    begin
+      @session, @session_hash = @hb.session_fromid(@ip, @session_id, @meta)
+    rescue ArgumentError => e
+      #User should not have the session he asked for because of invalid user-agent or invalid IP.
+      @session_id = @hb.session_generate_id(@meta)
+      @session, @session_hash = @hb.session_fromid(@ip, @session_id, @meta)
+      send_cookie = true
+    end
+    
+    if send_cookie
+      @resp.cookie(
+        "name" => "HayabusaSession",
+        "value" => @session_id,
+        "path" => "/",
+        "expires" => Time.now + 32140800 #add around 12 months
+      )
+    end
+    
+    raise "'session'-variable could not be spawned." if !@session
+    raise "'session_hash'-variable could not be spawned." if !@session_hash
+    Thread.current[:hayabusa][:session] = @session
+    
     
     begin
       @hb.events.call(:request_begin, :httpsession => self) if @hb.events
@@ -91,7 +107,7 @@ class Hayabusa::Cgi_session
           STDOUT.print "Calling handler.\n" if @debug
           @handlers_cache[@ext].call(self)
         else
-          raise "CGI-mode shouldnt serve static files."
+          raise "CGI-mode shouldnt serve static files: '#{@page_path}'."
         end
       end
       
@@ -154,7 +170,6 @@ class Hayabusa::Cgi_session
     Thread.current[:hayabusa] = {
       :hb => @hb,
       :httpsession => self,
-      :session => @session,
       :get => @get,
       :post => @post,
       :meta => @meta,
