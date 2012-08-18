@@ -8,6 +8,7 @@ gem "erubis"
 gem "mail"
 gem "datet"
 gem "http2"
+gem "tpool"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.

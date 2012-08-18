@@ -47,7 +47,8 @@ class Hayabusa
     gems = [
       [:Erubis, "erubis"],
       [:Knj, "knjrbfw"],
-      [:Tsafe, "tsafe"]
+      [:Tsafe, "tsafe"],
+      [:Tpool, "tpool"]
     ]
     
     gems.each do |gem|
@@ -373,7 +374,6 @@ class Hayabusa
     end
     
     begin
-      @threadpool.start if @threadpool
       STDOUT.print "Threadpool startet.\n" if @debug
       @httpserv.start
       STDOUT.print "Appserver startet.\n" if @debug
