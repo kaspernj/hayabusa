@@ -106,6 +106,11 @@ class Hayabusa
     @eruby_cache = {}
     @httpsessions_ids = {}
     
+    if @debug
+      @log_fp = File.open("/tmp/hayabusa_#{@config[:title]}.log", "w")
+      @log_fp.sync = true
+    end
+    
     @path_hayabusa = File.dirname(__FILE__)
     
     
@@ -115,7 +120,7 @@ class Hayabusa
         "#{@path_hayabusa}/class_customio.rb"
       ]
       
-      print "Auto restarting.\n" if @debug
+      self.log_puts "Auto restarting." if @debug
       @mod_event = Knj::Event_filemod.new(:wait => 2, :paths => paths, &self.method(:on_event_filemod))
     end
     
@@ -149,12 +154,12 @@ class Hayabusa
     ]
     
     files.each do |file|
-      STDOUT.print "Loading: '#{file}'.\n" if @debug
+      self.log_puts "Loading: '#{file}'." if @debug
       self.loadfile(file)
     end
     
     
-    print "Setting up database.\n" if @debug
+    self.log_puts "Setting up database." if @debug
     if @config[:db].is_a?(Knj::Db)
       @db = @config[:db]
     elsif @config[:db].is_a?(Hash)
@@ -182,7 +187,7 @@ class Hayabusa
     
     
     if !@config.key?(:dbrev) or @config[:dbrev]
-      print "Updating database.\n" if @debug
+      self.log_puts "Updating database." if @debug
       dbrev_args = {"schema" => Hayabusa::Database::SCHEMA, "db" => @db}
       dbrev_args.merge!(@config[:dbrev_args]) if @config.key?(:dbrev_args)
       Knj::Db::Revision.new.init_db(dbrev_args)
@@ -190,7 +195,7 @@ class Hayabusa
     end
     
     
-    print "Spawning objects.\n" if @debug
+    self.log_puts "Spawning objects." if @debug
     @ob = Knj::Objects.new(
       :db => db,
       :class_path => @path_hayabusa,
@@ -216,12 +221,12 @@ class Hayabusa
     require "#{@path_hayabusa}/kernel_ext/gettext_methods" if @config[:locales_gettext_funcs]
     
     if @config[:magic_methods] or !@config.has_key?(:magic_methods)
-      print "Loading magic-methods.\n" if @debug
+      self.log_puts "Loading magic-methods." if @debug
       require "#{@path_hayabusa}/kernel_ext/magic_methods"
     end
     
     if @config[:customio] or !@config.has_key?(:customio)
-      print "Loading custom-io.\n" if @debug
+      self.log_puts "Loading custom-io." if @debug
       
       if $stdout.class.name != "Hayabusa::Custom_io"
         @cio = Hayabusa::Custom_io.new
@@ -231,7 +236,7 @@ class Hayabusa
     
     
     #Save the PID to the run-file.
-    print "Setting run-file.\n" if @debug
+    self.log_puts "Setting run-file." if @debug
     tmpdir = "#{Knj::Os.tmpdir}/hayabusa"
     tmppath = "#{tmpdir}/run_#{@config[:title]}"
     
@@ -248,7 +253,7 @@ class Hayabusa
     
     #Set up various events for the appserver.
     if !@config.key?(:events) or @config[:events]
-      print "Loading events.\n" if @debug
+      self.log_puts "Loading events." if @debug
       @events = Knj::Event_handler.new
       @events.add_event(
         :name => :check_page_access,
@@ -284,34 +289,34 @@ class Hayabusa
     
     
     #Initialize the various feature-modules.
-    print "Init sessions.\n" if @debug
+    self.log_puts "Init sessions." if @debug
     self.initialize_sessions
     
     if !@config.key?(:threadding) or @config[:threadding]
       self.loadfile("#{@path_hayabusa}/hayabusa_ext/threadding.rb")
       self.loadfile("#{@path_hayabusa}/hayabusa_ext/threadding_timeout.rb")
-      print "Init threadding.\n" if @debug
+      self.log_puts "Init threadding." if @debug
       self.initialize_threadding
     end
     
-    print "Init mailing.\n" if @debug
+    self.log_puts "Init mailing." if @debug
     self.initialize_mailing
     
-    print "Init errors.\n" if @debug
+    self.log_puts "Init errors." if @debug
     self.initialize_errors
     
-    print "Init logging.\n" if @debug
+    self.log_puts "Init logging." if @debug
     self.initialize_logging
     
     if !@config.key?(:cleaner) or @config[:cleaner]
       self.loadfile("#{@path_hayabusa}/hayabusa_ext/cleaner.rb")
-      print "Init cleaner.\n" if @debug
+      self.log_puts "Init cleaner." if @debug
       self.initialize_cleaner
     end
     
     if !@config.key?(:cmdline) or @config[:cmdline]
       self.loadfile("#{@path_hayabusa}/hayabusa_ext/cmdline.rb")
-      print "Init cmdline.\n" if @debug
+      self.log_puts "Init cmdline." if @debug
       self.initialize_cmdline
     end
     
@@ -320,7 +325,12 @@ class Hayabusa
     Kernel.at_exit(&self.method(:stop))
     
     
-    print "Appserver spawned.\n" if @debug
+    self.log_puts "Appserver spawned." if @debug
+  end
+  
+  #Outputs to stderr and logs it.
+  def log_puts(str)
+    @log_fp.puts str if @debug
   end
   
   def no_date(event, classname)
@@ -328,7 +338,7 @@ class Hayabusa
   end
   
   def on_event_filemod(event, path)
-    print "File changed - restart server: #{path}\n"
+    self.log_puts "File changed - restart server: #{path}"
     @should_restart = true
     @mod_event.destroy if @mod_event
   end
@@ -360,25 +370,25 @@ class Hayabusa
   #Starts the HTTP-server and threadpool.
   def start
     #Start the appserver.
-    print "Spawning appserver.\n" if @debug
+    self.log_puts "Spawning appserver." if @debug
     @httpserv = Hayabusa::Http_server.new(self)
     
     
-    STDOUT.print "Starting appserver.\n" if @debug
+    self.log_puts "Starting appserver." if @debug
     Thread.current[:hayabusa] = {:hb => self} if !Thread.current[:hayabusa]
     
     if @config[:autoload]
-      STDOUT.print "Autoloading #{@config[:autoload]}\n" if @debug
+      self.log_puts "Autoloading #{@config[:autoload]}" if @debug
       require @config[:autoload]
     end
     
     begin
       @threadpool.start if @threadpool
-      STDOUT.print "Threadpool startet.\n" if @debug
+      self.log_puts "Threadpool startet." if @debug
       @httpserv.start
-      STDOUT.print "Appserver startet.\n" if @debug
+      self.log_puts "Appserver startet." if @debug
     rescue Interrupt => e
-      STDOUT.print "Got interrupt - trying to stop appserver.\n" if @debug
+      self.log_puts "Got interrupt - trying to stop appserver." if @debug
       self.stop
       raise e
     end
@@ -390,17 +400,17 @@ class Hayabusa
     @stop_called = true
     
     proc_stop = proc{
-      STDOUT.print "Stopping appserver.\n" if @debug
+      self.log_puts "Stopping appserver." if @debug
       @httpserv.stop if @httpserv and @httpserv.respond_to?(:stop)
       
-      STDOUT.print "Stopping threadpool.\n" if @debug
+      self.log_puts "Stopping threadpool." if @debug
       @threadpool.stop if @threadpool
       
       #This should be done first to be sure it finishes (else we have a serious bug).
-      STDOUT.print "Flush out loaded sessions.\n" if @debug
+      self.log_puts "Flush out loaded sessions." if @debug
       self.sessions_flush
       
-      STDOUT.print "Stopping done...\n" if @debug
+      self.log_puts "Stopping done..." if @debug
     }
     
     #If we cant get a paused-execution in 5 secs - we just force the stop.
@@ -409,7 +419,7 @@ class Hayabusa
         self.paused_exec(&proc_stop)
       end
     rescue Timeout::Error, SystemExit, Interrupt
-      STDOUT.print "Forcing stop-appserver - couldnt get timing window.\n" if @debug
+      self.log_puts "Forcing stop-appserver - couldnt get timing window." if @debug
       proc_stop.call
     end
   end
@@ -472,7 +482,7 @@ class Hayabusa
     if @should_restart
       loop do
         if @should_restart_done
-          STDOUT.print "Ending join because the restart is done.\n"
+          self.log_puts "Ending join because the restart is done."
           break
         end
         
@@ -508,7 +518,7 @@ class Hayabusa
   def translations
     if !@translations
       #Start the Knj::Gettext_threadded- and Knj::Translations modules for translations.
-      print "Loading Gettext and translations.\n" if @debug
+      self.log_puts "Loading Gettext and translations." if @debug
       @translations = Knj::Translations.new(:db => @db)
       @ob.requireclass(:Translation, :require => false, :class => Knj::Translations::Translation)
     end

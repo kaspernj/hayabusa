@@ -51,8 +51,13 @@ class Hayabusa::Fcgi
           #Set this instance to run in proxy-mode.
           begin
             @fcgi_proxy = fcgi_config
-            require "/home/kaspernj/Ruby/http2/lib/http2.rb"
+            require "http2"
             @fcgi_proxy[:http] = Http2.new(:host => "localhost", :port => @fcgi_proxy[:port].to_i)
+            
+            if hayabusa_conf[:debug]
+              @fcgi_proxy[:fp_log] = File.open("/tmp/hayabusa_#{hayabusa_conf[:hayabusa][:title]}_#{Process.pid}.log", "w")
+              @fcgi_proxy[:fp_log].sync = true
+            end
           rescue
             @fcgi_proxy = nil
             raise
@@ -97,7 +102,12 @@ class Hayabusa::Fcgi
         if @fcgi_proxy
           #Proxy request to the host-FCGI-process.
           $stderr.puts "[hayabusa] Proxying request." if @debug
-          @cgi_tools.proxy_request_to(:cgi => cgi, :http => @fcgi_proxy[:http])
+          begin
+            @cgi_tools.proxy_request_to(:cgi => cgi, :http => @fcgi_proxy[:http], :fp_log => @fcgi_proxy[:fp_log])
+          rescue Errno::ECONNABORTED
+            @fcgi_proxy = nil #Force re-evaluate if this process should be host or proxy.
+            raise
+          end
         else
           self.handle_fcgi_request(:cgi => cgi)
         end
@@ -105,6 +115,14 @@ class Hayabusa::Fcgi
         cgi.print "Content-Type: text/html\r\n"
         cgi.print "\r\n"
         cgi.print Knj::Errors.error_str(e, :html => true)
+        
+        if @hayabusa
+          @hayabusa.log_puts e.inspect
+          @hayabusa.log_puts e.backtrace
+        else
+          STDERR.puts e.inspect
+          STDERR.puts e.backtrace
+        end
       ensure
         @cgi = nil
         @cgi_tools.cgi = nil

@@ -4,7 +4,7 @@ class Hayabusa
   # print _hb.trans(obj, :title) #=> "Trala"
   def trans(obj, key, args = {})
     args[:locale] = self.trans_locale if !args[:locale]
-    trans_val = @translations.get(obj, key, args).to_s
+    trans_val = self.translations.get(obj, key, args).to_s
     trans_val = @events.call(:trans_no_str, {:obj => obj, :key => key, :args => args}) if trans_val.length <= 0
     return trans_val
   end
@@ -30,14 +30,16 @@ class Hayabusa
   #===Examples
   # _hb.trans_set(obj, {:title => "Trala"})
   def trans_set(obj, values, args = {})
+    raise "Translations-object now spawned." if !self.translations
     args[:locale] = self.trans_locale if !args[:locale]
-    @translations.set(obj, values, args)
+    self.translations.set(obj, values, args)
   end
   
   #Deletes all translations for the given object.
   #===Examples
   # _hb.trans_del(obj)
   def trans_del(obj)
-    @translations.delete(obj)
+    raise "Translations-object now spawned." if !self.translations
+    self.translations.delete(obj)
   end
 end

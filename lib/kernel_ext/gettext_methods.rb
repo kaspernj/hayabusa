@@ -2,7 +2,7 @@
 
 def _(str)
   hb = _hb
-  session = _session
+  session = Thread.current[:hayabusa][:session].sess_data if Thread.current[:hayabusa] and Thread.current[:hayabusa][:session]
   locale = nil
   
   if Thread.current[:locale].to_s.length > 0
