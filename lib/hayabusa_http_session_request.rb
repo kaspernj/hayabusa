@@ -19,7 +19,16 @@ class Hayabusa::Http_session::Request
   #Reads content from the socket until the end of headers. Also does various error-checks.
   def read_socket(socket, cont)
     loop do
-      raise Errno::ECONNRESET, "Socket closed." if socket.closed?
+      if socket.closed?
+        if !cont.empty?
+          #This might just be the last allowed request...
+          break
+        else
+          #This should not have happened...
+          raise Errno::ECONNRESET, "Socket closed before trying to read."
+        end
+      end
+      
       read = socket.gets
       raise Errno::ECONNRESET, "Socket returned non-string: '#{read.class.name}'." if !read.is_a?(String)
       cont << read
@@ -58,15 +67,18 @@ class Hayabusa::Http_session::Request
     method = match[1]
     cont = cont.gsub(match[0], "")
     
+    uri_raw = match[2]
+    uri_raw = "index.rhtml" if uri_raw == ""
+    
     uri = Knj::Web.parse_uri(match[2])
     
     page_filepath = Knj::Web.urldec(uri[:path])
-    if page_filepath.length <= 0 or page_filepath == "/" or File.directory?("#{@hb.config[:doc_root]}/#{page_filepath}")
+    if page_filepath.empty? or page_filepath == "/" or File.directory?("#{@hb.config[:doc_root]}/#{page_filepath}")
       page_filepath = "#{page_filepath}/#{@hb.config[:default_page]}"
     end
     
     @page_path = "#{@hb.config[:doc_root]}/#{page_filepath}"
-    @get = Knj::Web.parse_urlquery(uri[:query], {:urldecode => true, :force_utf8 => true})
+    @get = Knj::Web.parse_urlquery(uri[:query], :urldecode => true, :force_utf8 => true)
     
     if @get["_hb_httpsession_id"]
       @hb.httpsessions_ids[@get["_hb_httpsession_id"]] = @args[:httpsession]

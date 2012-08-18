@@ -55,7 +55,7 @@ class Hayabusa::Http_session
     
     Dir.chdir(@config[:doc_root])
     ObjectSpace.define_finalizer(self, self.class.method(:finalize).to_proc) if @debug
-    STDOUT.print "New httpsession #{self.__id__} (total: #{@httpserver.http_sessions.count}).\n" if @debug
+    @hb.log_puts "New httpsession #{self.__id__} (total: #{@httpserver.http_sessions.count})." if @debug
     
     @thread_request = Thread.new(&self.method(:thread_request_run))
   end
@@ -80,15 +80,15 @@ class Hayabusa::Http_session
           @working = false
           break if @hb.should_restart
           
-          STDOUT.print "#{__id__} - Waiting to parse from socket.\n" if @debug
+          @hb.log_puts "#{__id__} - Waiting to parse from socket." if @debug
           Timeout.timeout(1800) do
             @handler.socket_parse(@socket)
           end
           
-          STDOUT.print "#{__id__} - Done parsing from socket.\n" if @debug
+          @hb.log_puts "#{__id__} - Done parsing from socket." if @debug
           
           while @hb.paused? #Check if we should be waiting with executing the pending request.
-            STDOUT.print "#{__id__} - Paused! (#{@hb.paused}) - sleeping.\n" if @debug
+            @hb.log_puts "#{__id__} - Paused! (#{@hb.paused}) - sleeping." if @debug
             sleep 0.1
           end
           
@@ -96,7 +96,7 @@ class Hayabusa::Http_session
           
           if max_requests_working and @httpserver
             while @httpserver.working_count.to_i >= max_requests_working
-              STDOUT.print "#{__id__} - Maximum amounts of requests are working (#{@httpserver.working_count}, #{max_requests_working}) - sleeping.\n" if @debug
+              @hb.log_puts "#{__id__} - Maximum amounts of requests are working (#{@httpserver.working_count}, #{max_requests_working}) - sleeping." if @debug
               sleep 0.1
             end
           end
@@ -106,13 +106,13 @@ class Hayabusa::Http_session
           @hb.ob.db.get_and_register_thread if @hb.ob.db.opts[:threadsafe]
           
           @working = true
-          STDOUT.print "#{__id__} - Serving.\n" if @debug
+          @hb.log_puts "#{__id__} - Serving." if @debug
           
           @httpserver.count_block do
             self.serve
           end
         ensure
-          STDOUT.print "#{__id__} - Closing request.\n" if @debug
+          @hb.log_puts "#{__id__} - Closing request." if @debug
           @working = false
           
           #Free reserved database-connections.
@@ -121,13 +121,14 @@ class Hayabusa::Http_session
         end
       end
     rescue Timeout::Error
-      STDOUT.print "#{__id__} - Closing httpsession because of timeout.\n" if @debug
+      @hb.log_puts "#{__id__} - Closing httpsession because of timeout." if @debug
     rescue Errno::ECONNRESET, Errno::ENOTCONN, Errno::EPIPE => e
-      STDOUT.print "#{__id__} - Connection error (#{e.inspect})...\n" if @debug
+      @hb.log_puts "#{__id__} - Connection error (#{e.inspect})..." if @debug
+      @hb.log_puts e.backtrace
     rescue Interrupt => e
       raise e
     rescue Exception => e
-      STDOUT.puts Knj::Errors.error_str(e)
+      @hb.log_puts Knj::Errors.error_str(e)
     ensure
       self.destruct
     end
@@ -181,11 +182,11 @@ class Hayabusa::Http_session
   end
   
   def self.finalize(id)
-    STDOUT.print "Http_session finalize #{id}.\n" if @debug
+    @hb.log_puts "Http_session finalize #{id}." if @debug
   end
   
   def destruct
-    STDOUT.print "Http_session destruct (#{@httpserver.http_sessions.length})\n" if @debug and @httpserver and @httpserver.http_sessions
+    @hb.log_puts "Http_session destruct (#{@httpserver.http_sessions.length})" if @debug and @httpserver and @httpserver.http_sessions
     
     begin
       @socket.close if !@socket.closed?
@@ -207,7 +208,7 @@ class Hayabusa::Http_session
   end
   
   def serve
-    STDOUT.print "Generating meta, cookie, get, post and headers.\n" if @debug
+    @hb.log_puts "Generating meta, cookie, get, post and headers." if @debug
     @meta = @handler.meta.merge(@socket_meta)
     @cookie = @handler.cookie
     @get = @handler.get
@@ -244,7 +245,7 @@ class Hayabusa::Http_session
       raise "Could not figure out the IP of the session."
     end
     
-    STDOUT.print "Figuring out session-ID, session-object and more.\n" if @debug
+    @hb.log_puts "Figuring out session-ID, session-object and more." if @debug
     if @cookie["HayabusaSession"].to_s.length > 0
       @session_id = @cookie["HayabusaSession"]
     elsif @browser["browser"] == "bot"
@@ -273,7 +274,7 @@ class Hayabusa::Http_session
     end
     
     if @config.key?(:logging) and @config[:logging][:access_db]
-      STDOUT.print "Doing access-logging.\n" if @debug
+      @hb.log_puts "Doing access-logging." if @debug
       @ips = [@meta["REMOTE_ADDR"]]
       @ips << @meta["HTTP_X_FORWARDED_FOR"].split(",")[0].strip if @meta["HTTP_X_FORWARDED_FOR"]
       @hb.logs_access_pending << {
@@ -287,7 +288,7 @@ class Hayabusa::Http_session
       }
     end
     
-    STDOUT.print "Initializing thread and content-group.\n" if @debug
+    @hb.log_puts "Initializing thread and content-group." if @debug
     self.init_thread
     Thread.current[:hayabusa][:contentgroup] = @cgroup
     time_start = Time.now.to_f if @debug
@@ -297,7 +298,7 @@ class Hayabusa::Http_session
       
       Timeout.timeout(@hb.config[:timeout]) do
         if @handlers_cache.key?(@ext)
-          STDOUT.print "Calling handler.\n" if @debug
+          @hb.log_puts "Calling handler." if @debug
           @handlers_cache[@ext].call(self)
         else
           #check if we should use a handler for this request.
@@ -350,7 +351,7 @@ class Hayabusa::Http_session
     
     @cgroup.mark_done
     @cgroup.write_output
-    STDOUT.print "#{__id__} - Served '#{@meta["REQUEST_URI"]}' in #{Time.now.to_f - time_start} secs (#{@resp.status}).\n" if @debug
+    @hb.log_puts "#{__id__} - Served '#{@meta["REQUEST_URI"]}' in #{Time.now.to_f - time_start} secs (#{@resp.status})." if @debug
     @cgroup.join
     
     @hb.events.call(:request_done, {
