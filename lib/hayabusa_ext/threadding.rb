@@ -4,7 +4,7 @@ class Hayabusa
     @config[:threadding][:max_running] = 8 if !@config[:threadding].has_key?(:max_running)
     
     @threadpool = Tpool.new(:threads => @config[:threadding][:max_running])
-    @threadpool.events.connect(:on_error, &self.method(:threadpool_on_error))
+    @threadpool.on_error(&self.method(:threadpool_on_error))
   end
   
   #Callback for when an error occurs in the threadpool.

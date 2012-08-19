@@ -20,7 +20,6 @@ end
 
 def _session
   return Thread.current[:hayabusa][:session].sess_data if Thread.current[:hayabusa] and Thread.current[:hayabusa][:session]
-  raise "Session was not registered on thread."
 end
 
 def _session_hash
