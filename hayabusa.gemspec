@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
-  s.date = %q{2012-08-17}
+  s.date = %q{2012-08-19}
   s.description = %q{A threadded web/app-server that focuses on threadding, shared ressources, speed and more.}
   s.email = %q{k@spernj.org}
   s.executables = ["check_running.rb", "hayabusa_benchmark.rb", "hayabusa_cgi.rb", "hayabusa_fcgi.fcgi", "hayabusa_fcgi.rb", "knjappserver_start.rb"]
@@ -52,6 +52,7 @@ Gem::Specification.new do |s|
     "lib/hayabusa_ext/threadding_timeout.rb",
     "lib/hayabusa_ext/translations.rb",
     "lib/hayabusa_ext/web.rb",
+    "lib/hayabusa_fcgi.rb",
     "lib/hayabusa_http_server.rb",
     "lib/hayabusa_http_session.rb",
     "lib/hayabusa_http_session_contentgroup.rb",
@@ -119,6 +120,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<mail>, [">= 0"])
       s.add_runtime_dependency(%q<datet>, [">= 0"])
       s.add_runtime_dependency(%q<http2>, [">= 0"])
+      s.add_runtime_dependency(%q<tpool>, [">= 0"])
       s.add_development_dependency(%q<json>, [">= 0"])
       s.add_development_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_development_dependency(%q<bundler>, [">= 1.0.0"])
@@ -130,6 +132,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<mail>, [">= 0"])
       s.add_dependency(%q<datet>, [">= 0"])
       s.add_dependency(%q<http2>, [">= 0"])
+      s.add_dependency(%q<tpool>, [">= 0"])
       s.add_dependency(%q<json>, [">= 0"])
       s.add_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_dependency(%q<bundler>, [">= 1.0.0"])
@@ -142,6 +145,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<mail>, [">= 0"])
     s.add_dependency(%q<datet>, [">= 0"])
     s.add_dependency(%q<http2>, [">= 0"])
+    s.add_dependency(%q<tpool>, [">= 0"])
     s.add_dependency(%q<json>, [">= 0"])
     s.add_dependency(%q<rspec>, ["~> 2.3.0"])
     s.add_dependency(%q<bundler>, [">= 1.0.0"])
