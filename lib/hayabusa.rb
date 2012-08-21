@@ -48,7 +48,8 @@ class Hayabusa
     gems = [
       [:Erubis, "erubis"],
       [:Knj, "knjrbfw"],
-      [:Tsafe, "tsafe"]
+      [:Tsafe, "tsafe"],
+      [:Tpool, "tpool"]
     ]
     
     gems.each do |gem|
@@ -97,6 +98,20 @@ class Hayabusa
     
     
     @debug = @config[:debug]
+    if @debug
+      if !@config.key?(:debug_log) or @config[:debug_log]
+        @debug_log = true
+      else
+        @debug_log = false
+      end
+      
+      if !@config.key?(:debug_print) or @config[:debug_print]
+        @debug_print = true
+      else
+        @debug_print = false
+      end
+    end
+    
     @paused = 0
     @paused_mutex = Mutex.new
     @should_restart = false
@@ -107,7 +122,7 @@ class Hayabusa
     @eruby_cache = {}
     @httpsessions_ids = {}
     
-    if @debug
+    if @debug_log
       @log_fp = File.open("/tmp/hayabusa_#{@config[:title]}.log", "w")
       @log_fp.sync = true
     end
@@ -331,7 +346,8 @@ class Hayabusa
   
   #Outputs to stderr and logs it.
   def log_puts(str)
-    @log_fp.puts str if @debug
+    @log_fp.puts str if @debug_log
+    STDOUT.puts str if @debug_print
   end
   
   def no_date(event, classname)
@@ -373,6 +389,7 @@ class Hayabusa
     #Start the appserver.
     self.log_puts "Spawning appserver." if @debug
     @httpserv = Hayabusa::Http_server.new(self)
+    @httpserv.start
     
     
     self.log_puts "Starting appserver." if @debug
@@ -384,9 +401,6 @@ class Hayabusa
     end
     
     begin
-      @threadpool.start if @threadpool
-      self.log_puts "Threadpool startet." if @debug
-      @httpserv.start
       self.log_puts "Appserver startet." if @debug
     rescue Interrupt => e
       self.log_puts "Got interrupt - trying to stop appserver." if @debug

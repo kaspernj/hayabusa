@@ -21,12 +21,12 @@ class Hayabusa::Http_server
     
     @thread_accept = Thread.new do
       loop do
-        if !@server or @server.closed?
-          STDOUT.puts "Starting TCPServer." if @debug
-          @server = TCPServer.new(@hb.config[:host], @hb.config[:port])
-        end
-        
         begin
+          if !@server or @server.closed?
+            STDOUT.puts "Starting TCPServer." if @debug
+            @server = TCPServer.new(@hb.config[:host], @hb.config[:port])
+          end
+          
           STDOUT.puts "Trying to spawn new HTTP-session from socket-accept." if @debug
           self.spawn_httpsession(@server.accept)
           STDOUT.puts "Starting new HTTP-request." if @debug
