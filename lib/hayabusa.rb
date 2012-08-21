@@ -34,7 +34,8 @@ class Hayabusa
       :default_filetype => "text/html",
       :max_requests_working => 20,
       :size_send => 1024,
-      :cleaner_timeout => 300
+      :cleaner_timeout => 300,
+      :mailing_time => 30
     }.merge(config)
     
     @config[:smtp_args] = {"smtp_host" => "localhost", "smtp_port" => 25} if !@config[:smtp_args]
@@ -408,14 +409,17 @@ class Hayabusa
       
       #This should be done first to be sure it finishes (else we have a serious bug).
       self.log_puts "Flush out loaded sessions." if @debug
-      self.sessions_flush
+      
+      #Flush sessions and mails (only if the modules are loaded).
+      self.sessions_flush if self.respond_to?(:sessions_flush)
+      self.mail_flush if self.respond_to?(:mail_flush)
       
       self.log_puts "Stopping done..." if @debug
     }
     
     #If we cant get a paused-execution in 5 secs - we just force the stop.
     begin
-      Timeout.timeout(5) do
+      Timeout.timeout(7) do
         self.paused_exec(&proc_stop)
       end
     rescue Timeout::Error, SystemExit, Interrupt

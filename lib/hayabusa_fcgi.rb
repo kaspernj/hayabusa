@@ -31,6 +31,8 @@ class Hayabusa::Fcgi
     hayabusa_conf = Hayabusa::FCGI_CONF[:hayabusa]
     hayabusa_conf.merge!(
       :cmdline => false,
+      :mailing_timeout => 1,
+      :mailing_instant => true,
       :port => 0 #Ruby picks random port and we get the actual port after starting the appserver.
     )
     
@@ -84,49 +86,54 @@ class Hayabusa::Fcgi
   
   def fcgi_loop
     $stderr.puts "[hayabusa] Starting FCGI." if @debug
-    FCGI.each_cgi do |cgi|
-      begin
-        #cgi.print "Content-Type: text/html\r\n"
-        #cgi.print "\r\n"
-        
-        #Set 'cgi'-variable for CGI-tools.
-        @cgi_tools.cgi = cgi
-        @cgi = cgi
-        
-        #Evaluate the mode of this instance.
-        self.evaluate_mode
-        
-        #Ensure the same FCGI-process isnt active for more than one website.
-        raise "Expected 'HTTP_HAYABUSA_FCGI_CONFIG' to be '#{@hayabusa_fcgi_conf_path}' but it wasnt: '#{cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if @hayabusa_fcgi_conf_path and @hayabusa_fcgi_conf_path != cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
-        
-        if @fcgi_proxy
-          #Proxy request to the host-FCGI-process.
-          $stderr.puts "[hayabusa] Proxying request." if @debug
-          begin
-            @cgi_tools.proxy_request_to(:cgi => cgi, :http => @fcgi_proxy[:http], :fp_log => @fcgi_proxy[:fp_log])
-          rescue Errno::ECONNABORTED
-            @fcgi_proxy = nil #Force re-evaluate if this process should be host or proxy.
-            raise
+    
+    begin
+      FCGI.each_cgi do |cgi|
+        begin
+          #cgi.print "Content-Type: text/html\r\n"
+          #cgi.print "\r\n"
+          
+          #Set 'cgi'-variable for CGI-tools.
+          @cgi_tools.cgi = cgi
+          @cgi = cgi
+          
+          #Evaluate the mode of this instance.
+          self.evaluate_mode
+          
+          #Ensure the same FCGI-process isnt active for more than one website.
+          raise "Expected 'HTTP_HAYABUSA_FCGI_CONFIG' to be '#{@hayabusa_fcgi_conf_path}' but it wasnt: '#{cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if @hayabusa_fcgi_conf_path and @hayabusa_fcgi_conf_path != cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
+          
+          if @fcgi_proxy
+            #Proxy request to the host-FCGI-process.
+            $stderr.puts "[hayabusa] Proxying request." if @debug
+            begin
+              @cgi_tools.proxy_request_to(:cgi => cgi, :http => @fcgi_proxy[:http], :fp_log => @fcgi_proxy[:fp_log])
+            rescue Errno::ECONNABORTED
+              @fcgi_proxy = nil #Force re-evaluate if this process should be host or proxy.
+              raise
+            end
+          else
+            self.handle_fcgi_request(:cgi => cgi)
           end
-        else
-          self.handle_fcgi_request(:cgi => cgi)
+        rescue Exception => e
+          cgi.print "Content-Type: text/html\r\n"
+          cgi.print "\r\n"
+          cgi.print Knj::Errors.error_str(e, :html => true)
+          
+          if @hayabusa
+            @hayabusa.log_puts e.inspect
+            @hayabusa.log_puts e.backtrace
+          else
+            STDERR.puts e.inspect
+            STDERR.puts e.backtrace
+          end
+        ensure
+          @cgi = nil
+          @cgi_tools.cgi = nil
         end
-      rescue Exception => e
-        cgi.print "Content-Type: text/html\r\n"
-        cgi.print "\r\n"
-        cgi.print Knj::Errors.error_str(e, :html => true)
-        
-        if @hayabusa
-          @hayabusa.log_puts e.inspect
-          @hayabusa.log_puts e.backtrace
-        else
-          STDERR.puts e.inspect
-          STDERR.puts e.backtrace
-        end
-      ensure
-        @cgi = nil
-        @cgi_tools.cgi = nil
       end
+    ensure
+      @hayabusa.stop if @hayabusa
     end
   end
   

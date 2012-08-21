@@ -5,12 +5,11 @@ class Hayabusa
   
   def initialize_mailing
     require "knj/autoload/ping"
-    require "monitor"
     
     @mails_waiting = []
     @mails_mutex = Monitor.new
     @mails_queue_mutex = Monitor.new
-    @mails_timeout = self.timeout(:time => 30, &self.method(:mail_flush))
+    @mails_timeout = self.timeout(:time => @config[:mailing_time], &self.method(:mail_flush))
   end
   
   #Queue a mail for sending. Possible keys are: :subject, :from, :to, :text and :html.
@@ -31,7 +30,13 @@ class Hayabusa
       mailobj = Hayabusa::Mail.new({:hb => self, :errors => {}, :status => :waiting}.merge(mail_args))
       STDOUT.print "Added mail '#{mailobj.__id__}' to the mail-send-queue.\n" if debug
       @mails_waiting << mailobj
-      self.mail_flush if mail_args[:now]
+      
+      #Try to send right away and raise error instantly if something happens if told to do so.
+      if mail_args[:now] or @config[:mailing_instant]
+        self.mail_flush
+        raise mailobj.args[:error] if mailobj.args[:error]
+      end
+      
       return mailobj
     end
   end
@@ -53,11 +58,9 @@ class Hayabusa
         return false  #Dont run if we dont have a connection to the internet and then properly dont have a connection to the SMTP as well.
       end
       
-      begin
-        #Use subprocessing to avoid the mail-framework (activesupport and so on, also possible memory leaks in those large frameworks).
-        STDOUT.print "Starting subprocess for mailing.\n" if @debug
-        require "knj/process_meta"
-        subproc = Knj::Process_meta.new("debug" => @debug, "debug_err" => true, "id" => "hayabusa_mailing")
+      #Use subprocessing to avoid the mail-framework (activesupport and so on, also possible memory leaks in those large frameworks).
+      STDOUT.print "Starting subprocess for mailing.\n" if @debug
+      Knj::Process_meta.new("debug" => @debug, "debug_err" => true, "id" => "hayabusa_mailing") do |subproc|
         subproc.static("Object", "require", "rubygems")
         subproc.static("Object", "require", "mail")
         subproc.static("Object", "require", "#{@config[:knjrbfw_path]}knjrbfw")
@@ -80,9 +83,6 @@ class Hayabusa
           
           sleep 1 #sleep so we dont take up too much bandwidth.
         end
-      ensure
-        subproc.destroy if subproc
-        subproc = nil
       end
       
       return nil
@@ -91,12 +91,23 @@ class Hayabusa
   
   #This class represents the queued mails.
   class Mail
+    attr_reader :args
+    
     def initialize(args)
       @args = args
       
       raise "No hayabusa-object was given (as :hb)." if !@args[:hb].is_a?(Hayabusa)
       raise "No :to was given." if !@args[:to]
       raise "No content was given (:html or :text)." if !@args[:html] and !@args[:text]
+      
+      #Test from-argument.
+      if !@args[:from].to_s.strip.empty?
+        #Its ok.
+      elsif !@args[:hb].config[:error_report_from].to_s.strip.empty?
+        @args[:from] = @args[:hb].config[:error_report_from]
+      else
+        raise "Dont know where to take the 'from'-paramter from - none given in appserver config or mail-method-arguments?"
+      end
     end
     
     #Returns a key from the arguments.
@@ -108,14 +119,6 @@ class Hayabusa
     def send(args = {})
       STDOUT.print "Sending mail '#{__id__}'.\n" if @args[:hb].debug
       
-      if @args[:from]
-        from = @args[:from]
-      elsif @args[:hb].config[:error_report_from]
-        from = @args[:hb].config[:error_report_from]
-      else
-        raise "Dont know where to take the 'from'-paramter from - none given in appserver config or mail-method-arguments?"
-      end
-      
       if args["proc"]
         args["proc"].static("Object", "require", "knj/mailobj")
         mail = args["proc"].new("Knj::Mailobj", @args[:hb].config[:smtp_args])
@@ -123,16 +126,15 @@ class Hayabusa
         mail._pm_send_noret("subject=", @args[:subject]) if @args[:subject]
         mail._pm_send_noret("html=", Knj::Strings.email_str_safe(@args[:html])) if @args[:html]
         mail._pm_send_noret("text=", Knj::Strings.email_str_safe(@args[:text])) if @args[:text]
-        mail._pm_send_noret("from=", from)
+        mail._pm_send_noret("from=", @args[:from])
         mail._pm_send_noret("send")
       else
-        require "knj/mailobj"
         mail = Knj::Mailobj.new(@args[:hb].config[:smtp_args])
         mail.to = @args[:to]
         mail.subject = @args[:subject] if @args[:subject]
         mail.html = Knj::Strings.email_str_safe(@args[:html]) if @args[:html]
         mail.text = Knj::Strings.email_str_safe(@args[:text]) if @args[:text]
-        mail.from = from
+        mail.from = @args[:from]
         mail.send
       end
       
