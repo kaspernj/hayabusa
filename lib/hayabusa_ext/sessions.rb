@@ -8,7 +8,7 @@ class Hayabusa
     ip = "bot" if idhash == "bot"
     
     if !@sessions.key?(idhash)
-      session = @ob.get_by(:Session, {"idhash" => idhash})
+      session = @ob.get_by(:Session, "idhash" => idhash)
       if !session
         session = @ob.add(:Session, {
           :idhash => idhash,
@@ -27,9 +27,7 @@ class Hayabusa
       hash = @sessions[idhash][:hash]
     end
     
-    if ip != "bot" and !session.remember? and ip.to_s != session[:ip].to_s
-      raise ArgumentError, "Invalid IP."
-    end
+    raise ArgumentError, "Invalid IP." if ip != "bot" and !session.remember? and ip.to_s != session[:ip].to_s
     
     @sessions[idhash][:time_lastused] = Time.now
     return [session, hash]

@@ -1,0 +1,18 @@
+<%
+  require "json"
+  
+  if !_session.key?(:request_count)
+    _session[:request_count] = 1
+  else
+    _session[:request_count] = _session[:request_count].to_i + 1
+  end
+  
+  print JSON.generate(
+    :pid => Process.pid,
+    :session_id => _session_obj.id,
+    :session_hash_id => _session.__id__,
+    :request_count => _session[:request_count],
+    :cookie => _cookie,
+    :meta => _meta
+  )
+%>

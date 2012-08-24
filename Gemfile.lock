@@ -1,7 +1,7 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    datet (0.0.15)
+    datet (0.0.17)
     diff-lcs (1.1.3)
     erubis (2.7.0)
     git (1.2.5)
@@ -12,7 +12,7 @@ GEM
       git (>= 1.2.5)
       rake
     json (1.7.5)
-    knjrbfw (0.0.87)
+    knjrbfw (0.0.90)
       datet
       http2
       php4r

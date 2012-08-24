@@ -57,7 +57,7 @@ class Hayabusa::Cgi_session
     @ext = File.extname(@page_path).downcase[1..-1].to_s
     
     @resp = Hayabusa::Http_session::Response.new(:socket => self)
-    @resp.reset(:http_version => http_version, :mode => :cgi)
+    @resp.reset(:http_version => http_version, :mode => :cgi, :cookie => @cookie)
     
     @cgroup = Hayabusa::Http_session::Contentgroup.new(:socket => self, :hb => @hb, :resp => @resp, :httpsession => self)
     @cgroup.reset
@@ -67,7 +67,7 @@ class Hayabusa::Cgi_session
     
     
     #Set up session-variables.
-    if @cookie["HayabusaSession"].to_s.length > 0
+    if !@cookie["HayabusaSession"].to_s.empty?
       @session_id = @cookie["HayabusaSession"]
     elsif @browser["browser"] == "bot"
       @session_id = "bot"
@@ -75,6 +75,11 @@ class Hayabusa::Cgi_session
       @session_id = @hb.session_generate_id(@meta)
       send_cookie = true
     end
+    
+    #Set the 'ip'-variable which is required for sessions.
+    @ip = @meta["REMOTE_ADDR"]
+    raise "No 'ip'-variable was set: '#{@meta}'." if !@ip
+    raise "'session_id' was not valid." if @session_id.to_s.strip.empty?
     
     begin
       @session, @session_hash = @hb.session_fromid(@ip, @session_id, @meta)

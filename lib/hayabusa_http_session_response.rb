@@ -38,6 +38,7 @@ class Hayabusa::Http_session::Response
     @close = true if @http_version == "1.0"
     @trailers = []
     @skip_statuscode = true if args[:mode] == :cgi
+    @session_cookie = args[:cookie]
     
     @headers_sent = false
     @headers_trailing = {}
@@ -77,6 +78,7 @@ class Hayabusa::Http_session::Response
   
   def cookie(cookie)
     @cookies << cookie
+    @session_cookie[cookie["name"]] = cookie["value"]
   end
   
   def header_str

@@ -53,8 +53,14 @@ class Hayabusa::Fcgi
           #Set this instance to run in proxy-mode.
           begin
             @fcgi_proxy = fcgi_config
-            require "http2"
-            @fcgi_proxy[:http] = Http2.new(:host => "localhost", :port => @fcgi_proxy[:port].to_i)
+            Knj.gem_require(:Http2, "http2")
+            
+            begin
+              @fcgi_proxy[:http] = Http2.new(:host => "localhost", :port => @fcgi_proxy[:port].to_i)
+            rescue Errno::ECONNREFUSED
+              #The host-process has properly closed - evaluate mode again.
+              raise Errno::EAGAIN
+            end
             
             if hayabusa_conf[:debug]
               @fcgi_proxy[:fp_log] = File.open("/tmp/hayabusa_#{hayabusa_conf[:hayabusa][:title]}_#{Process.pid}.log", "w")
@@ -98,7 +104,11 @@ class Hayabusa::Fcgi
           @cgi = cgi
           
           #Evaluate the mode of this instance.
-          self.evaluate_mode
+          begin
+            self.evaluate_mode
+          rescue Errno::EAGAIN
+            retry
+          end
           
           #Ensure the same FCGI-process isnt active for more than one website.
           raise "Expected 'HTTP_HAYABUSA_FCGI_CONFIG' to be '#{@hayabusa_fcgi_conf_path}' but it wasnt: '#{cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if @hayabusa_fcgi_conf_path and @hayabusa_fcgi_conf_path != cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]

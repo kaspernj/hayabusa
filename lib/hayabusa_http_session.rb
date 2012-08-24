@@ -218,7 +218,8 @@ class Hayabusa::Http_session
     close = true if @meta["HTTP_CONNECTION"] == "close"
     @resp.reset(
       :http_version => @handler.http_version,
-      :close => close
+      :close => close,
+      :cookie => @cookie
     )
     if @handler.http_version == "1.1"
       @cgroup.chunked = true
