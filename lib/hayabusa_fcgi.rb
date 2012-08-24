@@ -53,7 +53,7 @@ class Hayabusa::Fcgi
           #Set this instance to run in proxy-mode.
           begin
             @fcgi_proxy = fcgi_config
-            require "http2"
+            Knj.gem_require(:Http2, "http2")
             @fcgi_proxy[:http] = Http2.new(:host => "localhost", :port => @fcgi_proxy[:port].to_i)
             
             if hayabusa_conf[:debug]
