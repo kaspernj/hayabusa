@@ -3,7 +3,10 @@ class Hayabusa
     @config[:threadding] = {} if !@config.has_key?(:threadding)
     @config[:threadding][:max_running] = 8 if !@config[:threadding].has_key?(:max_running)
     
-    @threadpool = Tpool.new(:threads => @config[:threadding][:max_running])
+    threadpool_args = {:threads => @config[:threadding][:max_running]}
+    threadpool_args[:priority] = @config[:threadding][:priority] if @config[:threadding].key?(:priority)
+    
+    @threadpool = Tpool.new(threadpool_args)
     @threadpool.on_error(&self.method(:threadpool_on_error))
   end
   

@@ -23,13 +23,18 @@ describe "Hayabusa" do
       :doc_root => "#{File.dirname(__FILE__)}/../pages",
       :locales_gettext_funcs => true,
       :locale_default => "da_DK",
-      :db => db
+      :db => db,
+      :threadding => {
+        :priority => -3
+      }
     )
     
     $appserver.vars[:test] = "kasper"
     $appserver.define_magic_var(:_testvar1, "Kasper")
     $appserver.define_magic_var(:_testvar2, "Johansen")
     $appserver.start
+    
+    raise "Expected thread-pool-priority to be '-3' but it wasnt: '#{$appserver.threadpool.args[:priority]}'." if $appserver.threadpool.args[:priority] != -3
   end
   
   it "should be able to handle a GET-request." do
