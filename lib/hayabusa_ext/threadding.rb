@@ -56,7 +56,7 @@ class Hayabusa
         STDOUT.print "Free thread db-handler.\n" if @debug
         @db_handler.free_thread if @db_handler.opts[:threadsafe]
         
-        STDOUT.print "Set args on thread.\n" if @debug
+        STDOUT.print "Seting arguments on thread.\n" if @debug
         thread_obj.args[:running] = false
         thread_obj.args[:done] = true
       end

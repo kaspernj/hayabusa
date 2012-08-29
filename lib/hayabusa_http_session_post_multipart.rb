@@ -28,8 +28,10 @@ class Hayabusa::Http_session::Post_multipart
         end
       elsif @mode == "body"
         @data << line
+      elsif line == @args["crlf"] and !@mode
+        #ignore.
       else
-        raise "Invalid mode: '#{@mode}'."
+        raise "Invalid mode: '#{@mode}' for line: '#{line}'."
       end
     end
     
