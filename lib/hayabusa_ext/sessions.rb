@@ -40,7 +40,9 @@ class Hayabusa
   
   #Will make the session rememberable for a year. IP wont be checked any more.
   def session_remember
-    session = _httpsession.session
+    httpsession = Thread.current[:hayabusa][:httpsession]
+    raise "Could not figure out HTTP-session." if !httpsession
+    session = httpsession.session
     raise "Could not get session-variable from HTTP-session." if !session
     session[:remember] = 1
     
@@ -49,6 +51,21 @@ class Hayabusa
       "value" => _httpsession.session_id,
       "path" => "/",
       "expires" => Time.now + 32140800 #add around 12 months
+    )
+  end
+  
+  #Will make the session run out as soon as the user closes his browser.
+  def session_dont_remember
+    httpsession = Thread.current[:hayabusa][:httpsession]
+    raise "Could not figure out HTTP-session." if !httpsession
+    session = httpsession.session
+    raise "Could not get session-variable from HTTP-session." if !session
+    session[:remember] = 0
+    
+    self.cookie(
+      "name" => "HayabusaSession",
+      "value" => _httpsession.session_id,
+      "path" => "/"
     )
   end
   

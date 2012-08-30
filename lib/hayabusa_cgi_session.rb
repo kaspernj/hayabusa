@@ -1,6 +1,6 @@
 class Hayabusa::Cgi_session
   attr_accessor :data, :alert_sent
-  attr_reader :cookie, :get, :headers, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :page_path, :post, :cgroup, :meta, :httpsession_var, :working
+  attr_reader :cookie, :get, :headers, :ip, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :page_path, :post, :cgroup, :meta, :httpsession_var, :working
   
   def initialize(args)
     @args = args
@@ -77,7 +77,7 @@ class Hayabusa::Cgi_session
     end
     
     #Set the 'ip'-variable which is required for sessions.
-    @ip = @meta["REMOTE_ADDR"]
+    @ip = @hb.ip(:meta => @meta)
     raise "No 'ip'-variable was set: '#{@meta}'." if !@ip
     raise "'session_id' was not valid." if @session_id.to_s.strip.empty?
     
