@@ -31,8 +31,7 @@ class Hayabusa::Fcgi
     hayabusa_conf = Hayabusa::FCGI_CONF[:hayabusa]
     hayabusa_conf.merge!(
       :cmdline => false,
-      :mailing_timeout => 1,
-      :mailing_instant => true,
+      :mailing_timeout => 1, #Since FCGI might terminate at any time, try to send out mails almost instantly in the background.
       :port => 0 #Ruby picks random port and we get the actual port after starting the appserver.
     )
     
@@ -116,15 +115,14 @@ class Hayabusa::Fcgi
           if @fcgi_proxy
             #Proxy request to the host-FCGI-process.
             $stderr.puts "[hayabusa] Proxying request." if @debug
-            begin
-              @cgi_tools.proxy_request_to(:cgi => cgi, :http => @fcgi_proxy[:http], :fp_log => @fcgi_proxy[:fp_log])
-            rescue Errno::ECONNABORTED
-              @fcgi_proxy = nil #Force re-evaluate if this process should be host or proxy.
-              raise
-            end
+            @cgi_tools.proxy_request_to(:cgi => cgi, :http => @fcgi_proxy[:http], :fp_log => @fcgi_proxy[:fp_log])
           else
             self.handle_fcgi_request(:cgi => cgi)
           end
+        rescue Errno::ECONNABORTED
+          $stderr.puts "[hayabusa] Connection to server was interrupted - trying again."
+          @fcgi_proxy = nil #Force re-evaluate if this process should be host or proxy.
+          retry
         rescue Exception => e
           cgi.print "Content-Type: text/html\r\n"
           cgi.print "\r\n"

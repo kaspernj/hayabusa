@@ -1,7 +1,7 @@
 #This class handels the HTTP-sessions.
 class Hayabusa::Http_session
   attr_accessor :data, :alert_sent
-  attr_reader :cookie, :get, :headers, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :page_path, :post, :cgroup, :meta, :httpsession_var, :handler, :working
+  attr_reader :cookie, :get, :headers, :ip, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :page_path, :post, :cgroup, :meta, :httpsession_var, :handler, :working
   
   #Autoloader for subclasses.
   def self.const_missing(name)
@@ -237,14 +237,7 @@ class Hayabusa::Http_session
     @resp.header("Content-Type", @ctype)
     
     @browser = Knj::Web.browser(@meta)
-    
-    if @meta["HTTP_X_FORWARDED_FOR"]
-      @ip = @meta["HTTP_X_FORWARDED_FOR"].split(",")[0].strip
-    elsif @meta["REMOTE_ADDR"]
-      @ip = @meta["REMOTE_ADDR"]
-    else
-      raise "Could not figure out the IP of the session."
-    end
+    @ip = @hb.ip(:meta => @meta)
     
     @hb.log_puts "Figuring out session-ID, session-object and more." if @debug
     if @cookie["HayabusaSession"].to_s.length > 0

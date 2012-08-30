@@ -187,4 +187,23 @@ class Hayabusa
     raise "Http-server not spawned yet. Call Hayabusa#start to spawn it." if !@httpserv
     return @httpserv.server.addr[1]
   end
+  
+  #Returns the real IP of the client. Even if it has been proxied through multiple proxies.
+  def ip(args = nil)
+    if args and args[:meta]
+      meta = args[:meta]
+    elsif httpsession = Thread.current[:hayabusa][:httpsession]
+      meta = httpsession.meta
+    else
+      raise "Could not figure out meta-data."
+    end
+    
+    if !meta["HTTP_X_FORWARDED_FOR"].to_s.strip.empty? and ips = meta["HTTP_X_FORWARDED_FOR"].split(/\s*,\s*/)
+      return ips.first.to_s.strip
+    elsif ip = meta["REMOTE_ADDR"].to_s.strip and !ip.empty?
+      return ip
+    else
+      raise "Could not figure out IP from meta-data."
+    end
+  end
 end
