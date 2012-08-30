@@ -35,7 +35,7 @@ class Hayabusa
   
   #Generates a new session-ID by the meta data.
   def session_generate_id(meta)
-    return Digest::MD5.hexdigest("#{Time.now.to_f}_#{meta["HTTP_HOST"]}_#{meta["REMOTE_HOST"]}_#{meta["HTTP_X_FORWARDED_SERVER"]}_#{meta["HTTP_X_FORWARDED_FOR"]}_#{meta["HTTP_X_FORWARDED_HOST"]}_#{meta["REMOTE_ADDR"]}_#{meta["HTTP_USER_AGENT"]}")
+    return Digest::MD5.hexdigest("#{Time.now.to_f}_#{meta["HTTP_HOST"]}_#{self.ip(:meta => meta)}_#{meta["HTTP_USER_AGENT"]}")
   end
   
   #Will make the session rememberable for a year. IP wont be checked any more.

@@ -99,7 +99,7 @@ class Hayabusa::Models::Log < Knj::Datarow
   def ip
     meta_d = self.meta
     
-    return meta_d[:HTTP_X_FORWARDED_FOR] if meta_d.has_key?(:HTTP_X_FORWARDED_FOR)
+    return meta_d[:HTTP_X_FORWARDED_FOR].split(/\s*,\s*/).first if meta_d.has_key?(:HTTP_X_FORWARDED_FOR)
     return meta_d[:REMOTE_ADDR] if meta_d.has_key?(:REMOTE_ADDR)
     return "[no ip logged]"
   end
