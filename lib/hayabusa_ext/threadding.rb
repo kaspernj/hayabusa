@@ -11,7 +11,7 @@ class Hayabusa
   end
   
   #Callback for when an error occurs in the threadpool.
-  def threadpool_on_error(event, error)
+  def threadpool_on_error(error)
     self.handle_error(error)
   end
   

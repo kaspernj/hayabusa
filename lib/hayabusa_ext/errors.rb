@@ -17,12 +17,12 @@ class Hayabusa
   end
   
   #Send error-emails based on error-emails-cache (cached so the same error isnt send out every time it occurrs to prevent spamming).
-  def flush_error_emails
+  def flush_error_emails(args = {})
     @error_emails_pending_mutex.synchronize do
       send_time_older_than = Time.new.to_i - @error_emails_time
       
       @error_emails_pending.each do |backtrace_hash, error_email|
-        if send_time_older_than < error_email[:last_time].to_i and error_email[:messages].length < 1000
+        if !args[:ignore_time] and send_time_older_than < error_email[:last_time].to_i and error_email[:messages].length < 1000
           next
         end
         

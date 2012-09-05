@@ -400,13 +400,7 @@ class Hayabusa
       require @config[:autoload]
     end
     
-    begin
-      self.log_puts "Appserver startet." if @debug
-    rescue Interrupt => e
-      self.log_puts "Got interrupt - trying to stop appserver." if @debug
-      self.stop
-      raise e
-    end
+    self.log_puts "Appserver startet." if @debug
   end
   
   #Stops the entire app and releases join.
@@ -414,32 +408,21 @@ class Hayabusa
     return nil if @stop_called
     @stop_called = true
     
-    proc_stop = proc{
-      self.log_puts "Stopping appserver." if @debug
-      @httpserv.stop if @httpserv and @httpserv.respond_to?(:stop)
-      
-      self.log_puts "Stopping threadpool." if @debug
-      @threadpool.stop if @threadpool
-      
-      #This should be done first to be sure it finishes (else we have a serious bug).
-      self.log_puts "Flush out loaded sessions." if @debug
-      
-      #Flush sessions and mails (only if the modules are loaded).
-      self.sessions_flush if self.respond_to?(:sessions_flush)
-      self.mail_flush if self.respond_to?(:mail_flush)
-      
-      self.log_puts "Stopping done..." if @debug
-    }
+    self.log_puts "Stopping appserver." if @debug
+    @httpserv.stop if @httpserv and @httpserv.respond_to?(:stop)
     
-    #If we cant get a paused-execution in 5 secs - we just force the stop.
-    begin
-      Timeout.timeout(7) do
-        self.paused_exec(&proc_stop)
-      end
-    rescue Timeout::Error, SystemExit, Interrupt
-      self.log_puts "Forcing stop-appserver - couldnt get timing window." if @debug
-      proc_stop.call
-    end
+    self.log_puts "Stopping threadpool." if @debug
+    @threadpool.stop if @threadpool
+    
+    #This should be done first to be sure it finishes (else we have a serious bug).
+    self.log_puts "Flush out loaded sessions." if @debug
+    
+    #Flush sessions and mails (only if the modules are loaded).
+    self.flush_error_emails(:ignore_time => true) if self.respond_to?(:flush_error_emails)
+    self.sessions_flush if self.respond_to?(:sessions_flush)
+    self.mail_flush if self.respond_to?(:mail_flush)
+    
+    self.log_puts "Stopping done..." if @debug
   end
   
   #Stop running any more HTTP-requests - make them wait.
@@ -494,6 +477,7 @@ class Hayabusa
       @httpserv.thread_accept.join
       @httpserv.thread_restart.join if @httpserv and @httpserv.thread_restart
     rescue Interrupt => e
+      STDOUT.puts "Trying to stop because of interrupt - please wait while various data is beging flushed."
       self.stop
     end
     
