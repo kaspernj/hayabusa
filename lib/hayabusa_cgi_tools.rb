@@ -1,6 +1,7 @@
 class Hayabusa::Cgi_tools
   attr_accessor :cgi
   
+  #Converts CGI-like-post hashes to the normal Hayabusa-type hash.
   def convert_fcgi_post(params)
     post_hash = {}
     
@@ -10,7 +11,7 @@ class Hayabusa::Cgi_tools
     
     post_ret = {}
     post_hash.each do |varname, value|
-      Knj::Web.parse_name(post_ret, varname, value, :urldecode => true)
+      Knj::Web.parse_name(post_ret, varname, value)
     end
     
     return post_ret

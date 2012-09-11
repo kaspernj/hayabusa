@@ -15,6 +15,7 @@ describe "Hayabusa" do
         begin
           Http2.new(:host => "localhost") do |http|
             res = http.post(:url => "hayabusa_fcgi_test/vars_post_test.rhtml", :post => {
+              "test_special_chars" => "1%23+-456",
               "var" => {
                 0 => 1,
                 1 => 2,
@@ -37,6 +38,7 @@ describe "Hayabusa" do
               raise "Error when parsing result: '#{data}'."
             end
             
+            raise "Expected 'test_special_chars' to be '1%23+-456' but it wasnt: '#{data["test_special_chars"]}'." if data["test_special_chars"] != "1%23+-456"
             
             res = http.get("hayabusa_fcgi_test/threadded_content_test.rhtml")
             raise "Expected body to be '123456' but it was: '#{res.body}'." if res.body != "123456"
