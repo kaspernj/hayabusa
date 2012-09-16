@@ -11,8 +11,8 @@ class Hayabusa
   end
   
   #Callback for when an error occurs in the threadpool.
-  def threadpool_on_error(error)
-    self.handle_error(error)
+  def threadpool_on_error(args)
+    self.handle_error(args[:error])
   end
   
   #Inits the thread so it has access to the appserver and various magic methods can be used.
@@ -63,6 +63,23 @@ class Hayabusa
     end
     
     return thread_obj
+  end
+  
+  #If a custom thread is spawned, you can run whatever code within this block, and it will have its own database-connection and so on like normal Hayabusa-threads.
+  def thread_block(&block)
+    @ob.db.get_and_register_thread if @ob.db.opts[:threadsafe]
+    @db_handler.get_and_register_thread if @db_handler.opts[:threadsafe]
+    
+    thread = Thread.current
+    thread[:hayabusa] = {} if !thread[:hayabusa]
+    thread[:hayabusa][:hb] = self
+    
+    begin
+      block.call
+    ensure
+      @ob.db.free_thread if @ob.db.opts[:threadsafe]
+      @db_handler.free_thread if @db_handler.opts[:threadsafe]
+    end
   end
   
   #Runs a proc every number of seconds.
