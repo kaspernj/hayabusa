@@ -6,6 +6,8 @@ describe "Hayabusa" do
     require "hayabusa"
     require "knjrbfw"
     require "sqlite3" if RUBY_ENGINE != "jruby"
+    require "json"
+    require "http2"
     
     db_path = "#{Knj::Os.tmpdir}/hayabusa_rspec.sqlite3"
     File.unlink(db_path) if File.exists?(db_path)
@@ -29,25 +31,60 @@ describe "Hayabusa" do
       }
     )
     
+    $appserver.config[:handlers] << {
+      :regex => /^\/Kasper$/,
+      :callback => proc{|data|
+        data[:httpsession].page_path = nil
+        
+        eruby = data[:httpsession].eruby
+        eruby.connect(:on_error) do |e|
+          _hb.handle_error(e)
+        end
+        
+        eruby.import("#{File.dirname(__FILE__)}/../pages/spec.rhtml")
+      }
+    }
+    
     $appserver.vars[:test] = "kasper"
     $appserver.define_magic_var(:_testvar1, "Kasper")
     $appserver.define_magic_var(:_testvar2, "Johansen")
     $appserver.start
     
     raise "Expected thread-pool-priority to be '-3' but it wasnt: '#{$appserver.threadpool.args[:priority]}'." if $appserver.threadpool.args[:priority] != -3
+    
+    http = Http2.new(:host => "localhost", :port => 80)
+    
+    $testmodes = [{
+      :name => :standalone,
+      :path_pre => "",
+      :http => Http2.new(:host => "localhost", :port => 1515)
+    },{
+      :name => :cgi,
+      :path_pre => "hayabusa_cgi_test/",
+      :http => http
+    },{
+      :name => :fcgi,
+      :path_pre => "hayabusa_fcgi_test/",
+      :http => http
+    }]
+  end
+  
+  it "should be able to handle custom urls" do
+    $testmodes.each do |tdata|
+      res = tdata[:http].get("#{tdata[:path_pre]}Kasper")
+      raise "Expected data to be 'Test' in mode '#{tdata[:name]}' but it wasnt: '#{res.body}'." if res.body != "Test"
+    end
   end
   
   it "should be able to handle a GET-request." do
-    #Check that we are able to perform a simple GET request and get the correct data back.
-    require "http2"
-    $http = Http2.new(:host => "localhost", :port => 1515)
-    
-    res = $http.get("spec.rhtml")
-    raise "Unexpected HTML: '#{res.body}'." if res.body.to_s != "Test"
-    
-    #Check that URL-decoding are being done.
-    res = $http.get("spec.rhtml?choice=check_get_parse&value=#{Knj::Web.urlenc("gfx/nopic.png")}")
-    raise "Unexpected HTML: '#{res.body}'." if res.body.to_s != "gfx/nopic.png"
+    $testmodes.each do |tdata|
+      res = tdata[:http].get("#{tdata[:path_pre]}spec.rhtml")
+      raise "Unexpected HTML: '#{res.body}'." if res.body.to_s != "Test"
+      
+      #Check that URL-decoding are being done.
+      res = tdata[:http].get("#{tdata[:path_pre]}spec.rhtml?choice=check_get_parse&value=#{Knj::Web.urlenc("gfx/nopic.png")}")
+      raise "Unexpected HTML: '#{res.body}'." if res.body.to_s != "gfx/nopic.png"
+    end
   end
   
   it "should be able to handle a HEAD-request." do
@@ -57,17 +94,19 @@ describe "Hayabusa" do
   end
   
   it "should be able to handle a POST-request." do
-    res = $http.post(:url => "spec.rhtml", :post => {
-      "postdata" => "Test post"
-    })
-    raise "POST-request did not return expected data: '#{res.body}'." if res.body.to_s.strip != "Test post"
-    
-    res = $http.post(:url => "spec.rhtml?choice=dopostconvert", :post => {
-      "postdata" => "Test post",
-      "array" => ["a", "b", "d"]
-    })
-    data = JSON.parse(res.body)
-    raise "Expected posted data restored but it wasnt: '#{data}'." if data["array"]["0"] != "a" or data["array"]["1"] != "b" or data["array"]["2"] != "d"
+    $testmodes.each do |tdata|
+      res = tdata[:http].post(:url => "#{tdata[:path_pre]}spec.rhtml", :post => {
+        "postdata" => "Test post"
+      })
+      raise "POST-request did not return expected data: '#{res.body}' for '#{tdata[:name]}'." if res.body.to_s.strip != "Test post"
+      
+      res = tdata[:http].post(:url => "#{tdata[:path_pre]}spec.rhtml?choice=dopostconvert", :post => {
+        "postdata" => "Test post",
+        "array" => ["a", "b", "d"]
+      })
+      data = JSON.parse(res.body)
+      raise "Expected posted data restored but it wasnt: '#{data}'." if data["array"]["0"] != "a" or data["array"]["1"] != "b" or data["array"]["2"] != "d"
+    end
   end
   
   it "should be able to join the server so other tests can be made manually." do
@@ -82,30 +121,34 @@ describe "Hayabusa" do
   end
   
   it "should be able to use the header-methods." do
-    res = $http.get("spec.rhtml")
-    raise "Normal header data could not be detected." if res.header("testheader") != "NormalHeader"
-    raise "Raw header data could not be detected." if res.header("testraw") != "RawHeader"
+    $testmodes.each do |tdata|
+      res = tdata[:http].get("#{tdata[:path_pre]}spec.rhtml")
+      raise "Normal header data could not be detected." if res.header("testheader") != "NormalHeader"
+      raise "Raw header data could not be detected." if res.header("testraw") != "RawHeader"
+    end
   end
   
   it "should be able to set and get multiple cookies at the same time." do
-    require "json"
-    
-    res = $http.get("spec.rhtml?choice=test_cookie")
-    raise res.body if res.body.to_s.length > 0
-    
-    res = $http.get("spec.rhtml?choice=get_cookies")
-    parsed = JSON.parse(res.body)
-    
-    raise "Unexpected value for 'TestCookie': '#{parsed["TestCookie"]}'." if parsed["TestCookie"] != "TestValue"
-    raise "Unexpected value for 'TestCookie2': '#{parsed["TestCookie2"]}'." if parsed["TestCookie2"] != "TestValue2"
-    raise "Unexpected value for 'TestCookie3': '#{parsed["TestCookie3"]}'." if parsed["TestCookie3"] != "TestValue 3 "
+    $testmodes.each do |tdata|
+      res = tdata[:http].get("#{tdata[:path_pre]}spec.rhtml?choice=test_cookie")
+      raise res.body if res.body.to_s.length > 0
+      
+      res = tdata[:http].get("#{tdata[:path_pre]}spec.rhtml?choice=get_cookies")
+      parsed = JSON.parse(res.body)
+      
+      raise "Unexpected value for 'TestCookie': '#{parsed["TestCookie"]}'." if parsed["TestCookie"] != "TestValue"
+      raise "Unexpected value for 'TestCookie2': '#{parsed["TestCookie2"]}'." if parsed["TestCookie2"] != "TestValue2"
+      raise "Unexpected value for 'TestCookie3': '#{parsed["TestCookie3"]}'." if parsed["TestCookie3"] != "TestValue 3 "
+    end
   end
   
   it "should be able to run the rspec_threadded_content test correctly." do
-    res = $http.get("spec_threadded_content.rhtml")
-    
-    if res.body != "12345678910"
-      raise res.body.to_s
+    $testmodes.each do |tdata|
+      res = tdata[:http].get("#{tdata[:path_pre]}spec_threadded_content.rhtml")
+      
+      if res.body != "12345678910"
+        raise res.body.to_s
+      end
     end
   end
   
@@ -145,15 +188,20 @@ describe "Hayabusa" do
   end
   
   it "should be able to join threads tarted from _hb.thread." do
-    res = $http.get("spec_thread_joins.rhtml")
-    raise res.body if res.body.to_s != "12345"
+    $testmodes.each do |tdata|
+      res = tdata[:http].get("#{tdata[:path_pre]}spec_thread_joins.rhtml")
+      raise res.body if res.body.to_s != "12345"
+    end
   end
   
   it "should be able to properly parse special characters in post-requests." do
-    res = $http.post(:url => "spec_post.rhtml", :post => {
-      "test" => "123+456%789%20"
-    })
-    raise res.body if res.body != "123+456%789%20"
+    $testmodes.each do |tdata|
+      res = tdata[:http].post(:url => "#{tdata[:path_pre]}spec_vars_post.rhtml", :post => {
+        "test" => "123+456%789%20"
+      })
+      data = JSON.parse(res.body)
+      raise res.body if data["test"] != "123+456%789%20"
+    end
   end
   
   it "should be able to do logging" do
@@ -191,6 +239,70 @@ describe "Hayabusa" do
     
     logs = $appserver.ob.list(:Log, "object_lookup" => person).to_a
     raise "Expected count to be 0 but got: #{logs.length}" if logs.length != 0
+  end
+  
+  it "should handle multi-threadding well" do
+    ts = []
+    es = []
+    
+    #Execute multiple threads to test FCGI-proxy and thread-safety.
+    1.upto(5) do
+      $testmodes.each do |tdata|
+        ts << Thread.new do
+          begin
+            res = tdata[:http].post(:url => "#{tdata[:path_pre]}/spec_vars_post.rhtml", :post => {
+              "test_special_chars" => "1%23+-456",
+              "var" => {
+                0 => 1,
+                1 => 2,
+                3 => {
+                  "kasper" => 5,
+                  "arr" => ["a", "b", "c"]
+                }
+              }
+            })
+            
+            begin
+              data = JSON.parse(res.body)
+            rescue JSON::GeneratorError
+              raise "Could not parse JSON from result: '#{res.body}'."
+            end
+            
+            begin
+              raise "Expected hash to be a certain way: '#{data}'." if data["var"]["0"] != "1" or data["var"]["1"] != "2" or data["var"]["3"]["kasper"] != "5" or data["var"]["3"]["arr"]["0"] != "a" or data["var"]["3"]["arr"]["1"] != "b"
+            rescue => e
+              raise "Error when parsing result: '#{data}'."
+            end
+            
+            raise "Expected 'test_special_chars' to be '1%23+-456' but it wasnt: '#{data["test_special_chars"]}'." if data["test_special_chars"] != "1%23+-456"
+            
+            res = tdata[:http].get("#{tdata[:path_pre]}/spec_threadded_content.rhtml")
+            raise "Expected body to be '12345678910' but it was: '#{res.body}'." if res.body != "12345678910"
+            
+            res = tdata[:http].get("#{tdata[:path_pre]}/spec_vars_get.rhtml?var[]=1&var[]=2&var[]=3&var[3][kasper]=5")
+            data = JSON.parse(res.body)
+            raise "Expected hash to be a certain way: '#{data}'." if data["var"]["0"] != "1" or data["var"]["1"] != "2" or data["var"]["3"]["kasper"] != "5"
+            
+            
+            
+            res = tdata[:http].get("#{tdata[:path_pre]}/spec_vars_header.rhtml")
+            raise "Expected header 'testheader' to be 'TestValue' but it wasnt: '#{res.header("testheader")}'." if res.header("testheader") != "TestValue"
+          rescue => e
+            es << e
+            puts e.inspect
+            puts e.backtrace
+          end
+        end
+      end
+      
+      ts.each do |t|
+        t.join
+      end
+      
+      es.each do |e|
+        raise e
+      end
+    end
   end
   
   it "should be able to stop." do

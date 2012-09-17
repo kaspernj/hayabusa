@@ -24,7 +24,7 @@ describe "Hayabusa" do
           
           Http2.new(:host => "localhost", :user_agent => "Client#{t_i}", :debug => false) do |http|
             1.upto(25) do |request_i|
-              res = http.get(:url => "hayabusa_fcgi_test/multiple_threads.rhtml")
+              res = http.get(:url => "hayabusa_fcgi_test/spec_multiple_threads.rhtml")
               
               begin
                 data_json = JSON.parse(res.body)
@@ -84,11 +84,11 @@ describe "Hayabusa" do
         res2 = nil
         
         t1 = Thread.new do
-          res1 = http1.get(:url => "hayabusa_fcgi_test/sleeper.rhtml")
+          res1 = http1.get(:url => "hayabusa_fcgi_test/spec_sleeper.rhtml")
         end
         
         t2 = Thread.new do
-          res2 = http2.get(:url => "hayabusa_fcgi_test/sleeper.rhtml")
+          res2 = http2.get(:url => "hayabusa_fcgi_test/spec_sleeper.rhtml")
         end
         
         t1.join

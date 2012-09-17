@@ -84,6 +84,10 @@ class Hayabusa
       ]
     end
     
+    if @config[:handlers_extra]
+      @config[:handlers] += @config[:handlers_extra]
+    end
+    
     
     #Add extra handlers if given.
     @config[:handlers] += @config[:handlers_extra] if @config[:handlers_extra]
