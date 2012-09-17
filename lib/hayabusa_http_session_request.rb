@@ -70,7 +70,7 @@ class Hayabusa::Http_session::Request
     uri_raw = match[2]
     uri_raw = "index.rhtml" if uri_raw == ""
     
-    uri = Knj::Web.parse_uri(match[2])
+    uri = Knj::Web.parse_uri(match[2]) rescue {:path => match[2], :query => ""}
     
     page_filepath = Knj::Web.urldec(uri[:path])
     if page_filepath.empty? or page_filepath == "/" or File.directory?("#{@hb.config[:doc_root]}/#{page_filepath}")

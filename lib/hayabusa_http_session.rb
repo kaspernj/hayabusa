@@ -1,7 +1,7 @@
 #This class handels the HTTP-sessions.
 class Hayabusa::Http_session
-  attr_accessor :data, :alert_sent
-  attr_reader :cookie, :get, :headers, :ip, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :page_path, :post, :cgroup, :meta, :httpsession_var, :handler, :working
+  attr_accessor :alert_sent, :data, :page_path
+  attr_reader :cookie, :get, :headers, :ip, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :post, :cgroup, :meta, :httpsession_var, :handler, :working
   
   #Autoloader for subclasses.
   def self.const_missing(name)
@@ -298,41 +298,47 @@ class Hayabusa::Http_session
           #check if we should use a handler for this request.
           @config[:handlers].each do |handler_info|
             if handler_info.key?(:file_ext) and handler_info[:file_ext] == @ext
-              return handler_info[:callback].call(self)
+              handler_info[:callback].call(self)
+              break
             elsif handler_info.key?(:path) and handler_info[:mount] and @meta["SCRIPT_NAME"].slice(0, handler_info[:path].length) == handler_info[:path]
               @page_path = "#{handler_info[:mount]}#{@meta["SCRIPT_NAME"].slice(handler_info[:path].length, @meta["SCRIPT_NAME"].length)}"
+              break
+            elsif handler_info.key?(:regex) and @meta["REQUEST_URI"].to_s.match(handler_info[:regex])
+              handler_info[:callback].call(:httpsession => self)
               break
             end
           end
           
-          if !File.exists?(@page_path)
-            @resp.status = 404
-            @resp.header("Content-Type", "text/html")
-            @cgroup.write("File you are looking for was not found: '#{@meta["REQUEST_URI"]}'.")
-          else
-            if @headers["cache-control"] and @headers["cache-control"][0]
-              cache_control = {}
-              @headers["cache-control"][0].scan(/(.+)=(.+)/) do |match|
-                cache_control[match[1]] = match[2]
+          if @page_path
+            if !File.exists?(@page_path)
+              @resp.status = 404
+              @resp.header("Content-Type", "text/html")
+              @cgroup.write("File you are looking for was not found: '#{@meta["REQUEST_URI"]}'.")
+            else
+              if @headers["cache-control"] and @headers["cache-control"][0]
+                cache_control = {}
+                @headers["cache-control"][0].scan(/(.+)=(.+)/) do |match|
+                  cache_control[match[1]] = match[2]
+                end
               end
-            end
-            
-            cache_dont = true if cache_control and cache_control.key?("max-age") and cache_control["max-age"].to_i <= 0
-            lastmod = File.mtime(@page_path)
-            
-            @resp.header("Last-Modified", lastmod.httpdate)
-            @resp.header("Expires", (Time.now + 86400).httpdate) #next day.
-            
-            if !cache_dont and @headers["if-modified-since"] and @headers["if-modified-since"][0]
-              request_mod = Datet.in(@headers["if-modified-since"].first).time
               
-              if request_mod == lastmod
-                @resp.status = 304
-                return nil
+              cache_dont = true if cache_control and cache_control.key?("max-age") and cache_control["max-age"].to_i <= 0
+              lastmod = File.mtime(@page_path)
+              
+              @resp.header("Last-Modified", lastmod.httpdate)
+              @resp.header("Expires", (Time.now + 86400).httpdate) #next day.
+              
+              if !cache_dont and @headers["if-modified-since"] and @headers["if-modified-since"][0]
+                request_mod = Datet.in(@headers["if-modified-since"].first).time
+                
+                if request_mod == lastmod
+                  @resp.status = 304
+                  return nil
+                end
               end
+              
+              @cgroup.new_io(:type => :file, :path => @page_path)
             end
-            
-            @cgroup.new_io(:type => :file, :path => @page_path)
           end
         end
       end
