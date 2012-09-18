@@ -23,17 +23,17 @@ class Hayabusa::Http_server
       loop do
         begin
           if !@server or @server.closed?
-            STDOUT.puts "Starting TCPServer." if @debug
+            @hb.log_puts "Starting TCPServer." if @debug
             @server = TCPServer.new(@hb.config[:host], @hb.config[:port])
           end
           
-          STDOUT.puts "Trying to spawn new HTTP-session from socket-accept." if @debug
+          @hb.log_puts "Trying to spawn new HTTP-session from socket-accept." if @debug
           self.spawn_httpsession(@server.accept)
-          STDOUT.puts "Starting new HTTP-request." if @debug
+          @hb.log_puts "Starting new HTTP-request." if @debug
         rescue Exception => e
           if @debug
-            STDOUT.puts Knj::Errors.error_str(e)
-            STDOUT.print "Could not accept HTTP-request - waiting 1 sec and then trying again.\n"
+            @hb.log_puts Knj::Errors.error_str(e)
+            @hb.log_puts "Could not accept HTTP-request - waiting 1 sec and then trying again."
           end
           
           raise e if e.is_a?(SystemExit) or e.is_a?(Interrupt)
@@ -44,23 +44,29 @@ class Hayabusa::Http_server
   end
   
   def stop
-    STDOUT.print "Stopping accept-thread.\n" if @debug
+    while @working_count > 0
+      @hb.log_puts "Waiting until no HTTP-sessions are running." if @debug
+      sleep 0.1
+    end
+    
+    
+    @hb.log_puts "Stopping accept-thread." if @debug
     @thread_accept.kill if @thread_accept and @thread_accept.alive?
     @thread_restart.kill if @thread_restart and @thread_restart.alive?
     
-    STDOUT.print "Stopping all HTTP sessions.\n" if @debug
-    if @http_sessions
-      @http_sessions.each do |httpsession|
-        httpsession.destruct
-      end
-    end
+    #@hb.log_puts "Stopping all HTTP sessions." if @debug
+    #if @http_sessions
+    #  @http_sessions.each do |httpsession|
+    #    httpsession.destruct
+    #  end
+    #end
     
     begin
-      STDOUT.print "Stopping TCPServer.\n" if @debug
+      @hb.log_puts "Stopping TCPServer." if @debug
       @server.close if @server and !@server.closed?
-      STDOUT.print "TCPServer was closed.\n" if @debug
+      @hb.log_puts "TCPServer was closed." if @debug
     rescue Timeout::Error
-      raise "Could not close TCPserver.\n"
+      raise "Could not close TCPserver."
     rescue IOError => e
       if e.message == "closed stream"
         #ignore - it should be closed.
@@ -78,7 +84,7 @@ class Hayabusa::Http_server
   end
   
   def spawn_httpsession(socket)
-    STDOUT.puts "Starting new HTTP-session." if @debug
+    @hb.log_puts "Starting new HTTP-session." if @debug
     @http_sessions << Hayabusa::Http_session.new(self, socket)
   end
   

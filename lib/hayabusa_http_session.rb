@@ -1,8 +1,5 @@
 #This class handels the HTTP-sessions.
-class Hayabusa::Http_session
-  attr_accessor :alert_sent, :data, :page_path
-  attr_reader :cookie, :get, :headers, :ip, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :post, :cgroup, :meta, :httpsession_var, :handler, :working
-  
+class Hayabusa::Http_session < Hayabusa::Client_session
   #Autoloader for subclasses.
   def self.const_missing(name)
     require "#{File.dirname(__FILE__)}/hayabusa_http_session_#{name.to_s.downcase}.rb"
@@ -48,7 +45,7 @@ class Hayabusa::Http_session
       "SERVER_PORT" => addr_peer[1]
     }
     
-    @resp = Hayabusa::Http_session::Response.new(:socket => @socket)
+    @resp = Hayabusa::Http_session::Response.new(:hb => @hb, :socket => @socket)
     @handler = Hayabusa::Http_session::Request.new(:hb => @hb, :httpsession => self)
     @cgroup = Hayabusa::Http_session::Contentgroup.new(:socket => @socket, :hb => @hb, :resp => @resp, :httpsession => self)
     @resp.cgroup = @cgroup
@@ -134,53 +131,6 @@ class Hayabusa::Http_session
     end
   end
   
-  #Creates a new Hayabusa::Binding-object and returns the binding for that object.
-  def create_binding
-    binding_obj = Hayabusa::Http_session::Page_environment.new(:httpsession => self, :hb => @hb)
-    return binding_obj.get_binding
-  end
-  
-  #Is called when content is added and begings to write the output if it goes above the limit.
-  def add_size(size)
-    @written_size += size
-    @cgroup.write_output if @written_size >= @size_send
-  end
-  
-  def threadded_content(block)
-    raise "No block was given." if !block
-    cgroup = Thread.current[:hayabusa][:contentgroup].new_thread
-    
-    Thread.new do
-      begin
-        self.init_thread
-        cgroup.register_thread
-        
-        @hb.db_handler.get_and_register_thread if @hb and @hb.db_handler.opts[:threadsafe]
-        @hb.ob.db.get_and_register_thread if @hb and @hb.ob.db.opts[:threadsafe]
-        
-        block.call
-      rescue Exception => e
-        Thread.current[:hayabusa][:contentgroup].write Knj::Errors.error_str(e, {:html => true})
-        _hb.handle_error(e)
-      ensure
-        Thread.current[:hayabusa][:contentgroup].mark_done
-        @hb.ob.db.free_thread if @hb and @hb.ob.db.opts[:threadsafe]
-        @hb.db_handler.free_thread if @hb and @hb.db_handler.opts[:threadsafe]
-      end
-    end
-  end
-  
-  def init_thread
-    Thread.current[:hayabusa] = {} if !Thread.current[:hayabusa]
-    Thread.current[:hayabusa][:hb] = @hb
-    Thread.current[:hayabusa][:httpsession] = self
-    Thread.current[:hayabusa][:session] = @session
-    Thread.current[:hayabusa][:get] = @get
-    Thread.current[:hayabusa][:post] = @post
-    Thread.current[:hayabusa][:meta] = @meta
-    Thread.current[:hayabusa][:cookie] = @cookie
-  end
-  
   def self.finalize(id)
     @hb.log_puts "Http_session finalize #{id}." if @debug
   end
@@ -200,11 +150,6 @@ class Hayabusa::Http_session
     
     @eruby.destroy if @eruby
     @thread_request.kill if @thread_request.alive?
-  end
-  
-  #Forces the content to be the input - nothing else can be added after calling this.
-  def force_content(newcont)
-    @cgroup.force_content(newcont)
   end
   
   def serve
@@ -287,76 +232,7 @@ class Hayabusa::Http_session
     Thread.current[:hayabusa][:contentgroup] = @cgroup
     time_start = Time.now.to_f if @debug
     
-    begin
-      @hb.events.call(:request_begin, :httpsession => self) if @hb.events
-      
-      Timeout.timeout(@hb.config[:timeout]) do
-        if @handlers_cache.key?(@ext)
-          @hb.log_puts "Calling handler." if @debug
-          @handlers_cache[@ext].call(self)
-        else
-          #check if we should use a handler for this request.
-          @config[:handlers].each do |handler_info|
-            if handler_info.key?(:file_ext) and handler_info[:file_ext] == @ext
-              handler_info[:callback].call(self)
-              break
-            elsif handler_info.key?(:path) and handler_info[:mount] and @meta["SCRIPT_NAME"].slice(0, handler_info[:path].length) == handler_info[:path]
-              @page_path = "#{handler_info[:mount]}#{@meta["SCRIPT_NAME"].slice(handler_info[:path].length, @meta["SCRIPT_NAME"].length)}"
-              break
-            elsif handler_info.key?(:regex) and @meta["REQUEST_URI"].to_s.match(handler_info[:regex])
-              handler_info[:callback].call(:httpsession => self)
-              break
-            end
-          end
-          
-          if @page_path
-            if !File.exists?(@page_path)
-              @resp.status = 404
-              @resp.header("Content-Type", "text/html")
-              @cgroup.write("File you are looking for was not found: '#{@meta["REQUEST_URI"]}'.")
-            else
-              if @headers["cache-control"] and @headers["cache-control"][0]
-                cache_control = {}
-                @headers["cache-control"][0].scan(/(.+)=(.+)/) do |match|
-                  cache_control[match[1]] = match[2]
-                end
-              end
-              
-              cache_dont = true if cache_control and cache_control.key?("max-age") and cache_control["max-age"].to_i <= 0
-              lastmod = File.mtime(@page_path)
-              
-              @resp.header("Last-Modified", lastmod.httpdate)
-              @resp.header("Expires", (Time.now + 86400).httpdate) #next day.
-              
-              if !cache_dont and @headers["if-modified-since"] and @headers["if-modified-since"][0]
-                request_mod = Datet.in(@headers["if-modified-since"].first).time
-                
-                if request_mod == lastmod
-                  @resp.status = 304
-                  return nil
-                end
-              end
-              
-              @cgroup.new_io(:type => :file, :path => @page_path)
-            end
-          end
-        end
-      end
-    rescue SystemExit
-      #do nothing - ignore.
-    rescue Timeout::Error
-      @resp.status = 500
-      print "The request timed out."
-    end
-    
-    @cgroup.mark_done
-    @cgroup.write_output
-    @hb.log_puts "#{__id__} - Served '#{@meta["REQUEST_URI"]}' in #{Time.now.to_f - time_start} secs (#{@resp.status})." if @debug
-    @cgroup.join
-    
-    @hb.events.call(:request_done, {
-      :httpsession => self
-    }) if @hb.events
-    @httpsession_var = {}
+    self.execute_page
+    self.execute_done
   end
 end

@@ -71,8 +71,11 @@ class Hayabusa::Cgi_tools
     
     fp_log.puts("Proxying URL: '#{url}'.") if fp_log
     
-    require "timeout"
-    Timeout.timeout(ttime) do
+    #The HTTP-connection can have closed mean while, so we have to test it.
+    raise Errno::ECONNABORTED if !http.socket_working?
+    
+    #require "timeout"
+    #Timeout.timeout(ttime) do
       if cgi.request_method == "POST" and cgi.content_type.to_s.downcase.index("multipart/form-data") != nil
         count = 0
         http.post_multipart(
@@ -109,6 +112,6 @@ class Hayabusa::Cgi_tools
           }
         )
       end
-    end
+    #end
   end
 end

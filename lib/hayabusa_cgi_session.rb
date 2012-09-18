@@ -1,6 +1,6 @@
-class Hayabusa::Cgi_session
-  attr_accessor :data, :alert_sent
-  attr_reader :cookie, :get, :headers, :ip, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :page_path, :post, :cgroup, :meta, :httpsession_var, :working
+class Hayabusa::Cgi_session < Hayabusa::Client_session
+  attr_accessor :alert_sent, :data, :page_path
+  attr_reader :cookie, :get, :headers, :ip, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :post, :cgroup, :meta, :httpsession_var, :working
   
   def initialize(args)
     @args = args
@@ -105,24 +105,8 @@ class Hayabusa::Cgi_session
     
     
     begin
-      @hb.events.call(:request_begin, :httpsession => self) if @hb.events
-      
-      Timeout.timeout(@hb.config[:timeout]) do
-        if @handlers_cache.key?(@ext)
-          @hb.log_puts "Calling handler." if @debug
-          @handlers_cache[@ext].call(self)
-        else
-          raise "CGI-mode shouldnt serve static files: '#{@page_path}'."
-        end
-      end
-      
-      @cgroup.mark_done
-      @cgroup.write_output
-      @cgroup.join
-      
-      @hb.events.call(:request_done, {
-        :httpsession => self
-      }) if @hb.events
+      self.execute_page
+      self.execute_done
     rescue SystemExit
       #do nothing - ignore.
     rescue Timeout::Error
@@ -133,75 +117,5 @@ class Hayabusa::Cgi_session
   
   def handler
     return self
-  end
-  
-  #Parses the if-modified-since header and returns it as a Time-object. Returns false is no if-modified-since-header is given or raises an RuntimeError if it cant be parsed.
-  def modified_since
-    return @modified_since if @modified_since
-    return false if !@meta["HTTP_IF_MODIFIED_SINCE"]
-    
-    mod_match = @meta["HTTP_IF_MODIFIED_SINCE"].match(/^([A-z]+),\s+(\d+)\s+([A-z]+)\s+(\d+)\s+(\d+):(\d+):(\d+)\s+(.+)$/)
-    raise "Could not parse 'HTTP_IF_MODIFIED_SINCE'." if !mod_match
-    
-    month_no = Datet.month_str_to_no(mod_match[3])
-    @modified_since = Time.utc(mod_match[4].to_i, month_no, mod_match[2].to_i, mod_match[5].to_i, mod_match[6].to_i, mod_match[7].to_i)
-    
-    return @modified_since
-  end
-  
-  #Forces the content to be the input - nothing else can be added after calling this.
-  def force_content(newcont)
-    @cgroup.force_content(newcont)
-  end
-  
-  #Creates a new Hayabusa::Binding-object and returns the binding for that object.
-  def create_binding
-    return Hayabusa::Http_session::Page_environment.new(:httpsession => self, :hb => @hb).get_binding
-  end
-  
-  #Is called when content is added and begings to write the output if it goes above the limit.
-  def add_size(size)
-    @written_size += size
-    @cgroup.write_output if @written_size >= @size_send
-  end
-  
-  #Called from content-group.
-  def write(str)
-    @out.print(str)
-  end
-  
-  def threadded_content(block)
-    raise "No block was given." if !block
-    cgroup = Thread.current[:hayabusa][:contentgroup].new_thread
-    
-    Thread.new do
-      begin
-        self.init_thread
-        cgroup.register_thread
-        
-        @hb.db_handler.get_and_register_thread if @hb and @hb.db_handler.opts[:threadsafe]
-        @hb.ob.db.get_and_register_thread if @hb and @hb.ob.db.opts[:threadsafe]
-        
-        block.call
-      rescue Exception => e
-        Thread.current[:hayabusa][:contentgroup].write Knj::Errors.error_str(e, {:html => true})
-        _hb.handle_error(e)
-      ensure
-        Thread.current[:hayabusa][:contentgroup].mark_done
-        @hb.ob.db.free_thread if @hb and @hb.ob.db.opts[:threadsafe]
-        @hb.db_handler.free_thread if @hb and @hb.db_handler.opts[:threadsafe]
-      end
-    end
-  end
-  
-  def init_thread
-    Thread.current[:hayabusa] = {
-      :hb => @hb,
-      :httpsession => self,
-      :get => @get,
-      :post => @post,
-      :meta => @meta,
-      :cookie => @cookie
-    }
   end
 end

@@ -109,10 +109,14 @@ class Hayabusa
         @debug_log = false
       end
       
-      if !@config.key?(:debug_print) or @config[:debug_print]
+      if @config[:debug_print]
         @debug_print = true
       else
         @debug_print = false
+      end
+      
+      if !@config.key?(:debug_print_err) or @config[:debug_print_err]
+        @debug_print_err = true
       end
     end
     
@@ -350,8 +354,20 @@ class Hayabusa
   
   #Outputs to stderr and logs it.
   def log_puts(str)
-    @log_fp.puts str if @debug_log
-    STDOUT.puts str if @debug_print
+    if @debug_log
+      @log_fp.sync = true
+      @log_fp.puts str
+    end
+    
+    if @debug_print
+      STDOUT.sync = true
+      STDOUT.puts str
+    end
+    
+    if @debug_print_err
+      STDERR.sync = true
+      STDERR.puts str
+    end
   end
   
   def no_date(event, classname)

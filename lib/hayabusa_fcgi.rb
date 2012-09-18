@@ -119,7 +119,7 @@ class Hayabusa::Fcgi
           else
             self.handle_fcgi_request(:cgi => cgi)
           end
-        rescue Errno::ECONNABORTED
+        rescue Errno::ECONNABORTED, Errno::ECONNREFUSED
           $stderr.puts "[hayabusa] Connection to server was interrupted - trying again."
           @fcgi_proxy = nil #Force re-evaluate if this process should be host or proxy.
           retry
@@ -141,6 +141,7 @@ class Hayabusa::Fcgi
         end
       end
     ensure
+      $stderr.puts "[hayabusa] FCGI-loop stopped."
       @hayabusa.stop if @hayabusa
     end
   end

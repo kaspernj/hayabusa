@@ -4,10 +4,10 @@ describe "Hayabusa" do
   it "should be able to start a sample-server" do
     require "rubygems"
     require "hayabusa"
-    require "knjrbfw"
+    require "/home/kaspernj/Dev/Ruby/Gems/knjrbfw/lib/knjrbfw.rb"
     require "sqlite3" if RUBY_ENGINE != "jruby"
     require "json"
-    require "http2"
+    Knj.gem_require(:Http2, "http2")
     
     db_path = "#{Knj::Os.tmpdir}/hayabusa_rspec.sqlite3"
     File.unlink(db_path) if File.exists?(db_path)
@@ -69,12 +69,12 @@ describe "Hayabusa" do
     }]
   end
   
-  it "should be able to handle custom urls" do
-    $testmodes.each do |tdata|
-      res = tdata[:http].get("#{tdata[:path_pre]}Kasper")
-      raise "Expected data to be 'Test' in mode '#{tdata[:name]}' but it wasnt: '#{res.body}'." if res.body != "Test"
-    end
-  end
+  #it "should be able to handle custom urls" do
+  #  $testmodes.each do |tdata|
+  #    res = tdata[:http].get("#{tdata[:path_pre]}Kasper")
+  #    raise "Expected data to be 'Test' in mode '#{tdata[:name]}' but it wasnt: '#{res.body}'." if res.body != "Test"
+  #  end
+  #end
   
   it "should be able to handle a GET-request." do
     $testmodes.each do |tdata|
@@ -89,7 +89,7 @@ describe "Hayabusa" do
   
   it "should be able to handle a HEAD-request." do
     #Http2 doesnt support head?
-    #res = $http.head("/spec.rhtml")
+    #res = $http.head("spec.rhtml")
     #raise "HEAD-request returned content - it shouldnt?" if res.body.to_s.length > 0
   end
   
@@ -145,10 +145,7 @@ describe "Hayabusa" do
   it "should be able to run the rspec_threadded_content test correctly." do
     $testmodes.each do |tdata|
       res = tdata[:http].get("#{tdata[:path_pre]}spec_threadded_content.rhtml")
-      
-      if res.body != "12345678910"
-        raise res.body.to_s
-      end
+      raise "Expected body to be '12345678910' for mode '#{tdata[:name]}' but it wasnt: '#{res.body.to_s}'." if res.body.to_s != "12345678910"
     end
   end
   
@@ -250,7 +247,7 @@ describe "Hayabusa" do
       $testmodes.each do |tdata|
         ts << Thread.new do
           begin
-            res = tdata[:http].post(:url => "#{tdata[:path_pre]}/spec_vars_post.rhtml", :post => {
+            res = tdata[:http].post(:url => "#{tdata[:path_pre]}spec_vars_post.rhtml", :post => {
               "test_special_chars" => "1%23+-456",
               "var" => {
                 0 => 1,
@@ -276,16 +273,16 @@ describe "Hayabusa" do
             
             raise "Expected 'test_special_chars' to be '1%23+-456' but it wasnt: '#{data["test_special_chars"]}'." if data["test_special_chars"] != "1%23+-456"
             
-            res = tdata[:http].get("#{tdata[:path_pre]}/spec_threadded_content.rhtml")
+            res = tdata[:http].get("#{tdata[:path_pre]}spec_threadded_content.rhtml")
             raise "Expected body to be '12345678910' but it was: '#{res.body}'." if res.body != "12345678910"
             
-            res = tdata[:http].get("#{tdata[:path_pre]}/spec_vars_get.rhtml?var[]=1&var[]=2&var[]=3&var[3][kasper]=5")
+            res = tdata[:http].get("#{tdata[:path_pre]}spec_vars_get.rhtml?var[]=1&var[]=2&var[]=3&var[3][kasper]=5")
             data = JSON.parse(res.body)
             raise "Expected hash to be a certain way: '#{data}'." if data["var"]["0"] != "1" or data["var"]["1"] != "2" or data["var"]["3"]["kasper"] != "5"
             
             
             
-            res = tdata[:http].get("#{tdata[:path_pre]}/spec_vars_header.rhtml")
+            res = tdata[:http].get("#{tdata[:path_pre]}spec_vars_header.rhtml")
             raise "Expected header 'testheader' to be 'TestValue' but it wasnt: '#{res.header("testheader")}'." if res.header("testheader") != "TestValue"
           rescue => e
             es << e

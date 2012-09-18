@@ -28,6 +28,7 @@ class Hayabusa::Http_session::Response
   def initialize(args)
     @chunked = false
     @socket = args[:socket]
+    @hb = args[:hb]
   end
   
   def reset(args)
@@ -142,7 +143,7 @@ class Hayabusa::Http_session::Response
     end
     
     if @close and @mode != :cgi
-      _hb.log_puts("Closing socket.")
+      @hb.log_puts("Closing socket.")
       @socket.close
     end
   end
