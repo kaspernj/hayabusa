@@ -1,7 +1,7 @@
 #Various client-sessions should extend this class.
 class Hayabusa::Client_session
   attr_accessor :alert_sent, :data, :page_path
-  attr_reader :cookie, :get, :headers, :ip, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :post, :cgroup, :meta, :httpsession_var, :working
+  attr_reader :cookie, :get, :handler, :headers, :ip, :session, :session_id, :session_hash, :hb, :active, :out, :eruby, :browser, :debug, :resp, :post, :cgroup, :meta, :httpsession_var, :working
   
   #Parses the if-modified-since header and returns it as a Time-object. Returns false is no if-modified-since-header is given or raises an RuntimeError if it cant be parsed.
   def modified_since
