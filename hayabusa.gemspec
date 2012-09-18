@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "hayabusa"
-  s.version = "0.0.11"
+  s.version = "0.0.12"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
-  s.date = "2012-09-12"
+  s.date = "2012-09-18"
   s.description = "A threadded web/app-server that focuses on threadding, shared ressources, speed and more."
   s.email = "k@spernj.org"
   s.executables = ["check_running.rb", "hayabusa_benchmark.rb", "hayabusa_cgi.rb", "hayabusa_fcgi.fcgi", "hayabusa_fcgi.rb", "knjappserver_start.rb"]
@@ -39,6 +39,7 @@ Gem::Specification.new do |s|
     "lib/hayabusa.rb",
     "lib/hayabusa_cgi_session.rb",
     "lib/hayabusa_cgi_tools.rb",
+    "lib/hayabusa_client_session.rb",
     "lib/hayabusa_custom_io.rb",
     "lib/hayabusa_database.rb",
     "lib/hayabusa_erb_handler.rb",
@@ -74,6 +75,8 @@ Gem::Specification.new do |s|
     "pages/benchmark_print.rhtml",
     "pages/benchmark_simple.rhtml",
     "pages/benchmark_threadded_content.rhtml",
+    "pages/config_cgi.rb",
+    "pages/config_fcgi.rb",
     "pages/debug_database_connections.rhtml",
     "pages/debug_http_sessions.rhtml",
     "pages/debug_memory_usage.rhtml",
@@ -81,30 +84,19 @@ Gem::Specification.new do |s|
     "pages/logs_latest.rhtml",
     "pages/logs_show.rhtml",
     "pages/spec.rhtml",
-    "pages/spec_post.rhtml",
+    "pages/spec_multiple_threads.rhtml",
+    "pages/spec_sleeper.rhtml",
     "pages/spec_test_multiple_clients.rhtml",
     "pages/spec_thread_joins.rhtml",
     "pages/spec_threadded_content.rhtml",
+    "pages/spec_vars_get.rhtml",
+    "pages/spec_vars_header.rhtml",
+    "pages/spec_vars_post.rhtml",
     "pages/tests.rhtml",
-    "spec/cgi_spec.rb",
-    "spec/custom_urls_spec.rb",
+    "pages/threadded_content_test.rhtml",
     "spec/fcgi_multiple_processes_spec.rb",
-    "spec/fcgi_spec.rb",
     "spec/hayabusa_spec.rb",
-    "spec/spec_helper.rb",
-    "tests/cgi_test/config_cgi.rb",
-    "tests/cgi_test/threadded_content_test.rhtml",
-    "tests/cgi_test/vars_get_test.rhtml",
-    "tests/cgi_test/vars_header_test.rhtml",
-    "tests/cgi_test/vars_post_test.rhtml",
-    "tests/fcgi_test/config_fcgi.rb",
-    "tests/fcgi_test/index.rhtml",
-    "tests/fcgi_test/multiple_threads.rhtml",
-    "tests/fcgi_test/sleeper.rhtml",
-    "tests/fcgi_test/threadded_content_test.rhtml",
-    "tests/fcgi_test/vars_get_test.rhtml",
-    "tests/fcgi_test/vars_header_test.rhtml",
-    "tests/fcgi_test/vars_post_test.rhtml"
+    "spec/spec_helper.rb"
   ]
   s.homepage = "http://github.com/kaspernj/hayabusa"
   s.licenses = ["MIT"]
