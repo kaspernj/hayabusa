@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "hayabusa"
-  s.version = "0.0.12"
+  s.version = "0.0.13"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
-  s.date = "2012-09-18"
+  s.date = "2012-09-20"
   s.description = "A threadded web/app-server that focuses on threadding, shared ressources, speed and more."
   s.email = "k@spernj.org"
   s.executables = ["check_running.rb", "hayabusa_benchmark.rb", "hayabusa_cgi.rb", "hayabusa_fcgi.fcgi", "hayabusa_fcgi.rb", "knjappserver_start.rb"]
