@@ -81,7 +81,7 @@ class Hayabusa::Fcgi
         cmd = "#{Knj::Os.executed_executable} #{File.realpath(File.dirname(__FILE__))}/../bin/hayabusa_fcgi_server.rb --conf_path=#{Knj::Strings.unixsafe(@hayabusa_fcgi_conf_path)} --fcgi_data_path=#{Knj::Strings.unixsafe(fcgi_config_fp)}"
         
         #Only used to identify the running FCGI-server host-processes with 'ps aux'.
-        cmd << "--title=#{Knj::Strings.unixsafe(hayabusa_conf[:title])}" if hayabusa_conf[:title]
+        cmd << " --title=#{Knj::Strings.unixsafe(hayabusa_conf[:title])}" if hayabusa_conf[:title]
         
         $stderr.puts("Executing command to start FCGI-server: #{cmd}")
         io_out, io_in, io_err = Open3.popen3(cmd)
