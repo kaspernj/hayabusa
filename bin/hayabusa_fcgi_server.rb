@@ -23,7 +23,7 @@ end
 opts = {}
 
 ARGV.each do |val|
-  if match = val.match(/^--(conf_path|fcgi_data_path)=(.+)$/)
+  if match = val.match(/^--(conf_path|fcgi_data_path|title)=(.+)$/)
     opts[match[1].to_sym] = match[2]
   else
     raise "Unknown argument: '#{val}'."

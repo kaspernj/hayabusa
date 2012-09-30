@@ -79,15 +79,24 @@ class Hayabusa::Fcgi
         #Spawn sub-process that actually runs the Hayabusa-server.
         require "open3"
         cmd = "#{Knj::Os.executed_executable} #{File.realpath(File.dirname(__FILE__))}/../bin/hayabusa_fcgi_server.rb --conf_path=#{Knj::Strings.unixsafe(@hayabusa_fcgi_conf_path)} --fcgi_data_path=#{Knj::Strings.unixsafe(fcgi_config_fp)}"
+        
+        #Only used to identify the running FCGI-server host-processes with 'ps aux'.
+        cmd << "--title=#{Knj::Strings.unixsafe(hayabusa_conf[:title])}" if hayabusa_conf[:title]
+        
         $stderr.puts("Executing command to start FCGI-server: #{cmd}")
         io_out, io_in, io_err = Open3.popen3(cmd)
         
         #Get data that should contain PID and port.
         read = io_in.gets
-        raise "FCGI-server didnt return required data." if !read
+        raise "Host-process didnt return required data." if !read
         
         #Parse data from the host-process (port and PID).
-        data = Marshal.load(Base64.strict_decode64(read.strip))
+        begin
+          data = Marshal.load(Base64.strict_decode64(read.strip))
+        rescue
+          raise "Invalid data given from host-process: '#{read}'."
+        end
+        
         
         #Detach the process where the HTTP-server runs from this process.
         Process.detach(data[:pid])
