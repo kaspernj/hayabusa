@@ -75,6 +75,7 @@ class Hayabusa::Client_session
   
   def execute_page
     begin
+      @time_start = Time.now.to_f if @debug
       @hb.events.call(:request_begin, :httpsession => self) if @hb.events
       
       Timeout.timeout(@hb.config[:timeout]) do
@@ -140,7 +141,8 @@ class Hayabusa::Client_session
   def execute_done
     @cgroup.mark_done
     @cgroup.write_output
-    @hb.log_puts "#{__id__} - Served '#{@meta["REQUEST_URI"]}' in #{Time.now.to_f - time_start} secs (#{@resp.status})." if @debug
+    @hb.log_puts "#{__id__} - Served '#{@meta["REQUEST_URI"]}' in #{Time.now.to_f - @time_start} secs (#{@resp.status})." if @debug
+    @time_start = nil
     @cgroup.join
     
     @hb.events.call(:request_done, {

@@ -1,5 +1,6 @@
 require "socket"
 
+#This class opens a port to run the HTTP-server on. It then spawns "Hayabusa::Http_session" for each active connection.
 class Hayabusa::Http_server
   attr_accessor :working_count
   attr_reader :hb, :http_sessions, :thread_accept, :thread_restart, :server
@@ -10,6 +11,7 @@ class Hayabusa::Http_server
     @mutex_count = Mutex.new
   end
   
+  #Opens a port with TCPServer and spins up a thread to accept connections.
   def start
     @http_sessions = []
     @working_count = 0
@@ -43,6 +45,7 @@ class Hayabusa::Http_server
     end
   end
   
+  #Gently stops the HTTP-server. Will wait for various HTTP-sessions to be finish with a page (but wont wait for them to disconnect in regards to keep-alive).
   def stop
     while @working_count > 0
       @hb.log_puts "Waiting until no HTTP-sessions are running." if @debug
@@ -83,11 +86,13 @@ class Hayabusa::Http_server
     @hb = nil
   end
   
+  #Spawns a new HTTP-session with the given socket.
   def spawn_httpsession(socket)
-    @hb.log_puts "Starting new HTTP-session." if @debug
+    @hb.log_puts("Starting new HTTP-session.") if @debug
     @http_sessions << Hayabusa::Http_session.new(self, socket)
   end
   
+  #Increases and decreases the 'working_count'-variable to keep track of how many HTTP-sessions are currently processing pages (used for gentle stops).
   def count_block
     begin
       added = false

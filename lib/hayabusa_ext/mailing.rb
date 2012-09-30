@@ -28,7 +28,7 @@ class Hayabusa
       end
       
       mailobj = Hayabusa::Mail.new({:hb => self, :errors => {}, :status => :waiting}.merge(mail_args))
-      STDOUT.print "Added mail '#{mailobj.__id__}' to the mail-send-queue.\n" if debug
+      self.log_puts("Added mail '#{mailobj.__id__}' to the mail-send-queue.") if debug
       @mails_waiting << mailobj
       
       #Try to send right away and raise error instantly if something happens if told to do so.
@@ -44,34 +44,34 @@ class Hayabusa
   #Sends all queued mails to the respective servers, if we are online.
   def mail_flush
     @mails_mutex.synchronize do
-      STDOUT.print "Flushing mails.\n" if @debug
+      self.log_puts("Flushing mails.") if @debug
       
       if @mails_waiting.length <= 0
-        STDOUT.print "No mails to flush - skipping.\n" if @debug
+        self.log_puts("No mails to flush - skipping.") if @debug
         return false
       end
       
-      STDOUT.print "Trying to ping Google to figure out if we are online...\n" if @debug
+      self.log_puts("Trying to ping Google to figure out if we are online...") if @debug
       status = Ping.pingecho("google.dk", 10, 80)
       if !status
-        STDOUT.print "We are not online - skipping mail flush.\n"
+        self.log_puts("We are not online - skipping mail flush.")
         return false  #Dont run if we dont have a connection to the internet and then properly dont have a connection to the SMTP as well.
       end
       
       #Use subprocessing to avoid the mail-framework (activesupport and so on, also possible memory leaks in those large frameworks).
-      STDOUT.print "Starting subprocess for mailing.\n" if @debug
+      self.log_puts("Starting subprocess for mailing.") if @debug
       Knj::Process_meta.new("debug" => @debug, "debug_err" => true, "id" => "hayabusa_mailing") do |subproc|
         subproc.static("Object", "require", "rubygems")
         subproc.static("Object", "require", "mail")
         subproc.static("Object", "require", "#{@config[:knjrbfw_path]}knjrbfw")
         subproc.static("Object", "require", "knj/autoload")
         
-        STDOUT.print "Flushing emails." if @debug
+        self.log_puts("Flushing emails.") if @debug
         @mails_waiting.each do |mail|
           begin
-            STDOUT.print "Sending email: #{mail.__id__}\n" if @debug
+            self.log_puts("Sending email: #{mail.__id__}") if @debug
             if mail.send("proc" => subproc)
-              STDOUT.print "Email sent: #{mail.__id__}\n" if @debug
+              self.log_puts("Email sent: #{mail.__id__}") if @debug
               @mails_waiting.delete(mail)
             end
           rescue Timeout::Error
@@ -117,7 +117,7 @@ class Hayabusa
     
     #Sends the email to the receiver.
     def send(args = {})
-      STDOUT.print "Sending mail '#{__id__}'.\n" if @args[:hb].debug
+      @args[:hb].log_puts("Sending mail '#{__id__}'.") if @args[:hb].debug
       
       if args["proc"]
         args["proc"].static("Object", "require", "knj/mailobj")
@@ -139,13 +139,13 @@ class Hayabusa
       end
       
       @args[:status] = :sent
-      STDOUT.print "Sent email #{self.__id__}\n" if @args[:hb].debug
+      @args[:hb].log_puts("Sent email #{self.__id__}") if @args[:hb].debug
       return true
     rescue => e
       if @args[:hb].debug
-        STDOUT.print "Could not send email.\n"
-        STDOUT.puts e.inspect
-        STDOUT.puts e.backtrace
+        @args[:hb].log_puts("Could not send email.")
+        @args[:hb].log_puts(e.inspect)
+        @args[:hb].log_puts(e.backtrace)
       end
       
       @args[:errors][e.class.name] = {:count => 0} if !@args[:errors].has_key?(e.class.name)

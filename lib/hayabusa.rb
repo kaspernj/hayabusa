@@ -46,8 +46,8 @@ class Hayabusa
     #Require gems.
     require "rubygems"
     gems = [
-      [:Erubis, "erubis"],
       [:Knj, "knjrbfw"],
+      [:Erubis, "erubis"],
       [:Tsafe, "tsafe"],
       [:Tpool, "tpool"]
     ]
@@ -102,22 +102,20 @@ class Hayabusa
     
     
     @debug = @config[:debug]
-    if @debug
-      if !@config.key?(:debug_log) or @config[:debug_log]
-        @debug_log = true
-      else
-        @debug_log = false
-      end
-      
-      if @config[:debug_print]
-        @debug_print = true
-      else
-        @debug_print = false
-      end
-      
-      if !@config.key?(:debug_print_err) or @config[:debug_print_err]
-        @debug_print_err = true
-      end
+    if !@config.key?(:debug_log) or @config[:debug_log]
+      @debug_log = true
+    else
+      @debug_log = false
+    end
+    
+    if @config[:debug_print]
+      @debug_print = true
+    else
+      @debug_print = false
+    end
+    
+    if !@config.key?(:debug_print_err) or @config[:debug_print_err]
+      @debug_print_err = true
     end
     
     @paused = 0
@@ -299,11 +297,10 @@ class Hayabusa
         :name => :request_begin,
         :connections_max => 1
       )
+      @events.add_event(:name => :http_session_destruct)
       
       #This event is used if the user himself wants stuff to be cleaned up when the appserver is cleaning up stuff.
-      @events.add_event(
-        :name => :on_clean
-      )
+      @events.add_event(:name => :on_clean)
     end
     
     #Set up the 'vars'-variable that can be used to set custom global variables for web-requests.
@@ -345,7 +342,7 @@ class Hayabusa
     end
     
     
-    #Clear memory at exit.
+    #Clear memory, flush emails, flush sessions and more at exit.
     Kernel.at_exit(&self.method(:stop))
     
     
@@ -497,7 +494,7 @@ class Hayabusa
       @httpserv.thread_accept.join
       @httpserv.thread_restart.join if @httpserv and @httpserv.thread_restart
     rescue Interrupt => e
-      STDOUT.puts "Trying to stop because of interrupt - please wait while various data is beging flushed."
+      self.log_puts("Trying to stop because of interrupt - please wait while various data is beging flushed.")
       self.stop
     end
     

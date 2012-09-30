@@ -17,10 +17,9 @@ begin
   require "fileutils"
   
   #Try to load development-version to enable debugging without doing constant gem-installations.
-  path = "/home/kaspernj/Ruby/knjrbfw/lib/knjrbfw.rb"
-  if File.exists?(path)
-    require path
-  else
+  begin
+    require "#{File.realpath(File.dirname(__FILE__))}/../../knjrbfw/lib/knjrbfw.rb"
+  rescue LoadError
     require "knjrbfw"
   end
   

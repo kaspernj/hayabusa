@@ -1,3 +1,4 @@
+#This class is used for FCGI-sessions. It normally starts a Hayabusa-host-process which this (and other) FCGI-processes will proxy requests to. The host-process will automatically kill itself when no more FCGI-sessions are connected to emulate normal FCGI behaviour.
 class Hayabusa::Fcgi
   def initialize
     #Spawn CGI-variable to emulate FCGI part.
@@ -10,6 +11,7 @@ class Hayabusa::Fcgi
     @debug = false
   end
   
+  #Evaluates if a new host-process should be started or we should proxy calls to an existing one.
   def evaluate_mode
     #If this is a FCGI-proxy-instance then the HTTP-connection should be checked if it is working.
     if @fcgi_proxy
@@ -52,7 +54,7 @@ class Hayabusa::Fcgi
           #Set this instance to run in proxy-mode.
           begin
             @fcgi_proxy = fcgi_config
-            Knj.gem_require(:Http2, "http2")
+            Knj.gem_require(:Http2)
             
             begin
               @fcgi_proxy[:http] = Http2.new(:host => "localhost", :port => @fcgi_proxy[:port].to_i)
@@ -74,21 +76,37 @@ class Hayabusa::Fcgi
       
       #No instance is already running - start new Hayabusa-instance in both CGI- and socket-mode and write that to the config-file so other instances will register this as the main host-instance.
       if !@fcgi_proxy
+        #Spawn sub-process that actually runs the Hayabusa-server.
+        require "open3"
+        cmd = "#{Knj::Os.executed_executable} #{File.realpath(File.dirname(__FILE__))}/../bin/hayabusa_fcgi_server.rb --conf_path=#{Knj::Strings.unixsafe(@hayabusa_fcgi_conf_path)} --fcgi_data_path=#{Knj::Strings.unixsafe(fcgi_config_fp)}"
+        $stderr.puts("Executing command to start FCGI-server: #{cmd}")
+        io_out, io_in, io_err = Open3.popen3(cmd)
+        
+        #Get data that should contain PID and port.
+        read = io_in.gets
+        raise "FCGI-server didnt return required data." if !read
+        
+        #Parse data from the host-process (port and PID).
+        data = Marshal.load(Base64.strict_decode64(read.strip))
+        
+        #Detach the process where the HTTP-server runs from this process.
+        Process.detach(data[:pid])
+        
+        #Write the data about the new HTTP-server in the config-file and re-evaluate mode. The host-process should not write the file itself, since this process has a lock on that file, and another process might try to start another host-process while writing the file from the host-process, which is not desired.
         File.open(fcgi_config_fp, "w") do |fp|
-          @hayabusa = Hayabusa.new(hayabusa_conf)
-          
-          #Start web-server for proxy-requests.
-          @hayabusa.start
-          
           fp.write(Marshal.dump(
-            :pid => Process.pid,
-            :port => @hayabusa.port
+            :pid => data[:pid],
+            :port => data[:port]
           ))
+          
+          #Started host-process - evaluate mode again and proxy request to the host-process.
+          raise Errno::EAGAIN
         end
       end
     end
   end
   
+  #Handels the requests comming from the FCGI-object in a loop.
   def fcgi_loop
     $stderr.puts "[hayabusa] Starting FCGI." if @debug
     
@@ -119,8 +137,8 @@ class Hayabusa::Fcgi
           else
             self.handle_fcgi_request(:cgi => cgi)
           end
-        rescue Errno::ECONNABORTED, Errno::ECONNREFUSED
-          $stderr.puts "[hayabusa] Connection to server was interrupted - trying again."
+        rescue Errno::ECONNABORTED, Errno::ECONNREFUSED, Errno::ECONNRESET => e
+          $stderr.puts "[hayabusa] Connection to server was interrupted - trying again: <#{e.class.name}> #{e.message}"
           @fcgi_proxy = nil #Force re-evaluate if this process should be host or proxy.
           retry
         rescue Exception => e
@@ -146,6 +164,7 @@ class Hayabusa::Fcgi
     end
   end
   
+  #Handles the request as a real request on a Hayabusa-host running inside the current process. This is not used any more but kept if we need support for it once again (maybe the developer should be able to decide this in some kind of config?).
   def handle_fcgi_request(args)
     #Host the FCGI-process.
     $stderr.puts "[hayabusa] Running request as CGI." if @debug

@@ -1,20 +1,35 @@
 <%
+  #Knj.p _hb.config
+  #exit
+  
+  _hb.log_puts("1")
   print "1"
   
+  _hb.log_puts("2")
   cont = "2"
-  t1 = _hb.thread do
+  t1 = _hb.thread(:id => 4) do
     sleep 0.5
+    _hb.log_puts("4")
     cont << "4"
+    _hb.log_puts("4 done")
   end
   
-  t2 = _hb.thread do
-    sleep 0.1
+  t2 = _hb.thread(:id => 3) do
+    sleep 0.3
+    _hb.log_puts("3")
     cont << "3"
+    _hb.log_puts("3 done")
   end
+  
+  sleep 0.1
+  
+  raise "Expected thread 1 to be running but it wasnt." if !t1.running?
+  raise "Expected thread 2 to be running but it wasnt." if !t2.running?
   
   t1.join
   t2.join_error
   
+  _hb.log_puts("5")
   cont << "5"
   
   print cont

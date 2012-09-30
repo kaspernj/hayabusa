@@ -3,7 +3,7 @@ require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 describe "Hayabusa" do
   it "should handle sessions correctly under stressed conditions" do
     require "knjrbfw"
-    Knj.gem_require(:Http2, "http2")
+    Knj.gem_require(:Http2)
     require "json"
     
     ts = []

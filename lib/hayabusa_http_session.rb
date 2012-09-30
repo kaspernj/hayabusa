@@ -141,14 +141,14 @@ class Hayabusa::Http_session < Hayabusa::Client_session
     begin
       @socket.close if !@socket.closed?
     rescue => e
-      STDOUT.puts e.inspect
-      STDOUT.puts e.backtrace
+      @hb.log_puts(e.inspect)
+      @hb.log_puts(e.backtrace)
       #ignore if it fails...
     end
     
     @httpserver.http_sessions.delete(self) if @httpserver and @httpserver.http_sessions
-    
     @eruby.destroy if @eruby
+    @hb.events.call(:http_session_destruct, :httpsession => self) if @hb.events
     @thread_request.kill if @thread_request.alive?
   end
   
@@ -208,7 +208,7 @@ class Hayabusa::Http_session < Hayabusa::Client_session
         "name" => "HayabusaSession",
         "value" => @session_id,
         "path" => "/",
-        "expires" => Time.now + 32140800 #add around 12 months
+        "expires" => Time.now + 32140800 #add around 12 months from the current time
       )
     end
     
@@ -230,7 +230,6 @@ class Hayabusa::Http_session < Hayabusa::Client_session
     @hb.log_puts "Initializing thread and content-group." if @debug
     self.init_thread
     Thread.current[:hayabusa][:contentgroup] = @cgroup
-    time_start = Time.now.to_f if @debug
     
     self.execute_page
     self.execute_done

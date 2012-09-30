@@ -1,7 +1,7 @@
 class Hayabusa
   def initialize_threadding
     @config[:threadding] = {} if !@config.has_key?(:threadding)
-    @config[:threadding][:max_running] = 8 if !@config[:threadding].has_key?(:max_running)
+    @config[:threadding][:max_running] = 16 if !@config[:threadding].has_key?(:max_running)
     
     threadpool_args = {:threads => @config[:threadding][:max_running]}
     threadpool_args[:priority] = @config[:threadding][:priority] if @config[:threadding].key?(:priority)
@@ -30,35 +30,38 @@ class Hayabusa
     thread_obj = Hayabusa::Thread_instance.new(
       :running => false,
       :error => false,
-      :done => false
+      :done => false,
+      :args => args
     )
     
     @threadpool.run_async do
-      @ob.db.get_and_register_thread if @ob.db.opts[:threadsafe]
-      @db_handler.get_and_register_thread if @db_handler.opts[:threadsafe]
-      
-      Thread.current[:hayabusa] = {
-        :hb => self,
-        :db => @db_handler
-      }
-      
       begin
+        @ob.db.get_and_register_thread if @ob.db.opts[:threadsafe]
+        @db_handler.get_and_register_thread if @db_handler.opts[:threadsafe]
+        
+        Thread.current[:hayabusa] = {
+          :hb => self,
+          :db => @db_handler
+        }
+        
         thread_obj.args[:running] = true
         yield(*args[:args])
+        _hb.log_puts("Done yielding for #{args[:id]}")
       rescue => e
-        self.handle_error(e)
         thread_obj.args[:error] = true
         thread_obj.args[:error_obj] = e
+        
+        self.handle_error(e)
       ensure
-        STDOUT.print "Free thread ob-db.\n" if @debug
-        @ob.db.free_thread if @ob.db.opts[:threadsafe]
-        
-        STDOUT.print "Free thread db-handler.\n" if @debug
-        @db_handler.free_thread if @db_handler.opts[:threadsafe]
-        
-        STDOUT.print "Seting arguments on thread.\n" if @debug
+        _hb.log_puts("Seting arguments on thread.") if @debug
         thread_obj.args[:running] = false
         thread_obj.args[:done] = true
+        
+        _hb.log_puts("Free thread ob-db.") if @debug
+        @ob.db.free_thread if @ob.db.opts[:threadsafe]
+        
+        _hb.log_puts("Free thread db-handler.") if @debug
+        @db_handler.free_thread if @db_handler.opts[:threadsafe]
       end
     end
     
@@ -105,8 +108,24 @@ class Hayabusa::Thread_instance
     @args = args
   end
   
+  def running?
+    return @args[:running]
+  end
+  
+  def done?
+    return @args[:done]
+  end
+  
+  def error?
+    return true if @args[:error]
+    return false
+  end
+  
   def join
-    sleep 0.1 while !@args[:done]
+    while !@args[:done] and !@args[:error]
+      _hb.log_puts(@args)
+      sleep 0.1
+    end
   end
   
   def join_error

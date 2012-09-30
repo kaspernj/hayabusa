@@ -73,7 +73,7 @@ class Hayabusa
   def sessions_flush
     if @sessions
       @sessions.each do |session_hash, session_data|
-        STDOUT.print "Flushing session: #{session_data[:dbobj].id}\n" if @debug
+        self.log_puts("Flushing session: #{session_data[:dbobj].id}") if @debug
         session_data[:dbobj].flush
       end
     end

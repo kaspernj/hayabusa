@@ -159,7 +159,7 @@ class Hayabusa::Http_session::Request
             if @hb
               @hb.handle_error(e)
             else
-              STDOUT.print Knj::Errors.error_str(e)
+              STDOUT.print Knj::Errors.error_str(e) if !STDOUT.closed?
             end
           end
         end

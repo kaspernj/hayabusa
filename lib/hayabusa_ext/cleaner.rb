@@ -25,11 +25,11 @@ class Hayabusa
         
         if @config.has_key?(:restart_when_used_memory) and !@should_restart
           mbs_used = (Php4r.memory_get_usage / 1024) / 1024
-          STDOUT.print "Restart when over #{@config[:restart_when_used_memory]}mb\n" if @config[:debug]
-          STDOUT.print "Used: #{mbs_used}mb\n" if @config[:debug]
+          self.log_puts("Restart when over #{@config[:restart_when_used_memory]}mb") if @debug
+          self.log_puts("Used: #{mbs_used}mb") if @debug
           
           if mbs_used.to_i >= @config[:restart_when_used_memory].to_i
-            STDOUT.print "Memory is over #{@config[:restart_when_used_memory]} - restarting.\n"
+            self.log_puts("Memory is over #{@config[:restart_when_used_memory]} - restarting.") if @debug
             @should_restart = true
           end
         end
@@ -39,7 +39,7 @@ class Hayabusa
             @should_restart_runnning = true
             
             #When we begin to restart it should go as fast as possible - so start by flushing out any emails waiting so it goes faster the last time...
-            STDOUT.print "Flushing mails.\n"
+            self.log_puts("Flushing mails.") if @debug
             self.mail_flush
             
             #Lets try to find a time where no thread is working within the next 30 seconds. If we cant - we interrupt after 10 seconds and restart the server.
@@ -51,48 +51,48 @@ class Hayabusa
                   
                   if working_count and working_count > 0
                     working = true
-                    STDOUT.print "Someone is working - wait two sec and try to restart again!\n"
+                    self.log_puts("Someone is working - wait two sec and try to restart again!") if @debug
                   end
                   
                   if !working
-                    STDOUT.print "Found window where no sessions were active - restarting!\n"
+                    self.log_puts("Found window where no sessions were active - restarting!") if @debug
                     break
                   else
                     sleep 0.2
                   end
                   
-                  STDOUT.print "Trying to find window with no active sessions to restart...\n"
+                  self.log_puts("Trying to find window with no active sessions to restart...") if @debug
                 end
               end
             rescue Timeout::Error
-              STDOUT.print "Could not find a timing window for restarting... Forcing restart!\n"
+              self.log_puts("Could not find a timing window for restarting... Forcing restart!") if @debug
             end
             
             #Flush emails again if any are pending (while we tried to find a window to restart)...
-            STDOUT.print "Flushing mails.\n"
+            self.log_puts("Flushing mails.") if @debug
             self.mail_flush
             
-            STDOUT.print "Stopping appserver.\n"
+            self.log_puts("Stopping appserver.") if @debug
             self.stop
             
-            STDOUT.print "Figuring out restart-command.\n"
+            self.log_puts("Figuring out restart-command.") if @debug
             mycmd = @config[:restart_cmd]
             
             if !mycmd or mycmd.to_s.strip.length <= 0
               fpath = File.realpath("#{File.dirname(__FILE__)}/../hayabusa.rb")
               mycmd = Knj::Os.executed_cmd
               
-              STDOUT.print "Previous cmd: #{mycmd}\n"
+              self.log_puts("Previous cmd: #{mycmd}") if @debug
               mycmd = mycmd.gsub(/\s+hayabusa.rb/, " #{Knj::Strings.unixsafe(fpath)}")
             end
             
-            STDOUT.print "Restarting knjAppServer with command: #{mycmd}\n"
+            self.log_puts("Restarting knjAppServer with command: #{mycmd}") if @debug
             @should_restart_done = true
             print exec(mycmd)
             exit
           rescue => e
-            STDOUT.puts e.inspect
-            STDOUT.puts e.backtrace
+            self.log_puts(e.inspect)
+            self.log_puts(e.backtrace)
           end
         end
       end
@@ -103,7 +103,7 @@ class Hayabusa
   
   #This method can be used to clean the appserver. Dont call this from a HTTP-request.
   def clean_sessions
-    STDOUT.print "Cleaning sessions on appserver.\n" if @config[:debug]
+    self.log_puts("Cleaning sessions on appserver.") if @debug
     
     #Clean up various inactive sessions.
     session_not_ids = []
@@ -120,10 +120,10 @@ class Hayabusa
     
     @sessions = newsessions
     
-    STDOUT.print "Delete sessions...\n" if @config[:debug]
+    self.log_puts("Delete sessions...") if @debug
     @ob.list(:Session, {"id_not" => session_not_ids, "date_lastused_below" => (Time.now - 5356800)}) do |session|
       idhash = session[:idhash]
-      STDOUT.print "Deleting session: '#{session.id}'.\n" if @config[:debug]
+      self.log_puts("Deleting session: '#{session.id}'.") if @debug
       @ob.delete(session)
       @sessions.delete(idhash)
     end

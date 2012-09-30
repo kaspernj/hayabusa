@@ -43,11 +43,17 @@ class Hayabusa::Cgi_tools
     
     headers = {"Hayabusa_mode" => "proxy"}
     cgi.env_table.each do |key, val|
-      if key[0, 5] == "HTTP_" and key != "HTTP_HAYABUSA_CGI_CONFIG"
+      keyl = key.to_s.downcase
+      
+      if key[0, 5] == "HTTP_"
         key = key[5, key.length].gsub("_", " ")
         key = key.to_s.split(" ").select{|w| w.capitalize! or w }.join(" ")
         key = key.gsub(" ", "-")
-        headers[key] = val
+        keyl = key.downcase
+        
+        if keyl != "connection" and keyl != "accept-encoding" and keyl != "hayabusa-fcgi-config" and key != "hayabusa-cgi-config"
+          headers[key] = val
+        end
       end
     end
     
