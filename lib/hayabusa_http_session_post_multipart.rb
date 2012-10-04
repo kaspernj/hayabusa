@@ -80,8 +80,7 @@ class Hayabusa::Http_session::Post_multipart
       elsif !@mode and (line == crlf or line == "\n" or line == "\r\n")
         #ignore.
       else
-        line_str = line.gsub("\r", "\\r").gsub("\n", "\\n").gsub("\t", "\\t")
-        raise "Invalid mode: '#{@mode}' (#{@mode.class.name}) for line: '#{line}' (#{line_str}) for total post-string:\n#{@args[:io].string}"
+        raise "Invalid mode: '#{@mode}' (#{@mode.class.name}) for line: '#{line}' for total post-string:\n#{@args[:io].string}"
       end
     end
     
