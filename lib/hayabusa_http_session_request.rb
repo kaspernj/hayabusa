@@ -179,7 +179,7 @@ class Hayabusa::Http_session::Request
           raise Errno::ECONNRESET, "Socket returned non-string: '#{read.class.name}'." if !read.is_a?(String)
           
           post_data << read
-          @read += read.length
+          @read += read.bytesize
         end
         
         if mode == :multipart
