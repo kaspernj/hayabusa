@@ -1,4 +1,4 @@
-require "knj/web"
+require "tempfile"
 
 #If we are running on JRuby or Rubinius this will seriously speed things up if we are behind a proxy.
 if RUBY_PLATFORM == "java" or RUBY_ENGINE == "rbx"
@@ -156,31 +156,40 @@ class Hayabusa::Http_session::Request
               sleep 2
             end
           rescue => e
-            if @hb
-              @hb.handle_error(e)
-            else
-              STDOUT.print Knj::Errors.error_str(e) if !STDOUT.closed?
-            end
+            @hb.handle_error(e)
           end
+        end
+        
+        if @headers["content-type"] and match = @headers["content-type"].first.match(/^multipart\/form-data; boundary=(.+)\Z/)
+          #This is useually used for file-uploads and is expected to be slower because of disk-access. Use temporary file to spare memory.
+          mode = :multipart
+          post_data = Tempfile.open("hayabusa_multipart_raw")
+        else
+          #This is a normal post useually only with strings and such. That can be handeled by memory.
+          mode = :normal
+          post_data = ""
         end
         
         while @read < @clength
           read_size = @clength - @read
-          read_size = 4096 if read_size > 4096
+          read_size = 8192 if read_size > 8192
           
           raise Errno::ECONNRESET, "Socket closed." if socket.closed?
           read = socket.read(read_size)
           raise Errno::ECONNRESET, "Socket returned non-string: '#{read.class.name}'." if !read.is_a?(String)
+          
           post_data << read
           @read += read.length
         end
         
-        if @headers["content-type"] and match = @headers["content-type"].first.match(/^multipart\/form-data; boundary=(.+)\Z/)
+        if mode == :multipart
+          post_data.rewind
           post_treated = Hayabusa::Http_session::Post_multipart.new(
-            "io" => StringIO.new("#{post_data}"),
-            "boundary" => match[1],
-            "crlf" => @crlf
+            :io => post_data,
+            :boundary => match[1],
+            :crlf => @crlf
           ).return
+          post_data.close(true)
           
           self.convert_post(@post, post_treated, {:urldecode => false})
         else

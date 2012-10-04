@@ -5,8 +5,13 @@ class Hayabusa::Cgi_tools
   def convert_fcgi_post(params)
     post_hash = {}
     
-    params.each do |key, val|
-      post_hash[key] = val.first
+    params.each do |key, realval|
+      val = realval.first
+      
+      #Sometimes uploaded files are given as StringIO's.
+      val = val.string if val.is_a?(StringIO)
+      
+      post_hash[key] = val
     end
     
     post_ret = {}

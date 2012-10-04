@@ -121,7 +121,7 @@ class Hayabusa::Http_session < Hayabusa::Client_session
       @hb.log_puts "#{__id__} - Closing httpsession because of timeout." if @debug
     rescue Errno::ECONNRESET, Errno::ENOTCONN, Errno::EPIPE => e
       @hb.log_puts "#{__id__} - Connection error (#{e.inspect})..." if @debug
-      @hb.log_puts e.backtrace
+      @hb.log_puts e.backtrace if @debug
     rescue Interrupt => e
       raise e
     rescue Exception => e

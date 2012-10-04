@@ -46,21 +46,15 @@ class Hayabusa
         
         thread_obj.args[:running] = true
         yield(*args[:args])
-        _hb.log_puts("Done yielding for #{args[:id]}")
       rescue => e
         thread_obj.args[:error] = true
         thread_obj.args[:error_obj] = e
         
         self.handle_error(e)
       ensure
-        _hb.log_puts("Seting arguments on thread.") if @debug
         thread_obj.args[:running] = false
         thread_obj.args[:done] = true
-        
-        _hb.log_puts("Free thread ob-db.") if @debug
         @ob.db.free_thread if @ob.db.opts[:threadsafe]
-        
-        _hb.log_puts("Free thread db-handler.") if @debug
         @db_handler.free_thread if @db_handler.opts[:threadsafe]
       end
     end
@@ -123,7 +117,6 @@ class Hayabusa::Thread_instance
   
   def join
     while !@args[:done] and !@args[:error]
-      _hb.log_puts(@args)
       sleep 0.1
     end
   end

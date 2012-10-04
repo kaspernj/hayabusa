@@ -1,0 +1,9 @@
+<%
+  pdata = {}
+  _post.each do |key, val|
+    pdata[key] = val.to_s
+  end
+  
+  require "json"
+  print JSON.generate(pdata)
+%>

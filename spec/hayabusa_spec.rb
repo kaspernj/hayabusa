@@ -3,11 +3,22 @@ require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 describe "Hayabusa" do
   it "should be able to start a sample-server" do
     require "rubygems"
-    require "hayabusa"
-    require "/home/kaspernj/Dev/Ruby/Gems/knjrbfw/lib/knjrbfw.rb"
     require "sqlite3" if RUBY_ENGINE != "jruby"
     require "json"
-    Knj.gem_require(:Http2, "http2")
+    
+    begin
+      require "#{File.realpath(File.dirname(__FILE__))}/../../knjrbfw/lib/knjrbfw.rb"
+    rescue LoadError
+      require "knjrbfw"
+    end
+    
+    require "#{File.realpath(File.dirname(__FILE__))}/../lib/hayabusa.rb"
+    
+    begin
+      require "#{File.realpath(File.dirname(__FILE__))}/../../http2/lib/http2.rb"
+    rescue LoadError
+      require "http2"
+    end
     
     db_path = "#{Knj::Os.tmpdir}/hayabusa_rspec.sqlite3"
     File.unlink(db_path) if File.exists?(db_path)
@@ -52,7 +63,7 @@ describe "Hayabusa" do
     
     raise "Expected thread-pool-priority to be '-3' but it wasnt: '#{$appserver.threadpool.args[:priority]}'." if $appserver.threadpool.args[:priority] != -3
     
-    http = Http2.new(:host => "localhost", :port => 80)
+    http = Http2.new(:host => "localhost", :port => 80, :encoding_gzip => false, :debug => false)
     
     $testmodes = [{
       :name => :standalone,
@@ -75,6 +86,36 @@ describe "Hayabusa" do
   #    raise "Expected data to be 'Test' in mode '#{tdata[:name]}' but it wasnt: '#{res.body}'." if res.body != "Test"
   #  end
   #end
+  
+  it "should be able to upload files" do
+    $testmodes.each do |tdata|
+      fpath = "#{File.realpath(File.dirname(__FILE__))}/../pages/spec_thread_joins.rhtml"
+      
+      res = tdata[:http].post_multipart(:url => "#{tdata[:path_pre]}spec_vars_post_fileupload.rhtml", :post => {
+        "testfile" => {
+          :filename => "spec_thread_joins.rhtml",
+          :fpath => fpath
+        }
+      })
+      
+      data = JSON.parse(res.body)
+      
+      if data["testfile"] != File.read(fpath)
+        File.open("/tmp/hayabusa_spec_testfile1", "w") do |fp|
+          fp.puts("Class: #{data["testfile"].class.name}")
+          fp.write(data["testfile"])
+        end
+        
+        File.open("/tmp/hayabusa_spec_testfile2", "w") do |fp|
+          fp.write(File.read(fpath))
+        end
+        
+        raise "Expected uploaded data for mode '#{tdata[:name]}' to be the same but it wasnt:\n\"#{data["testfile"]}\"\n\n\"#{File.read(fpath)}\""
+      end
+    end
+  end
+  
+  if false
   
   it "should be able to handle a GET-request." do
     $testmodes.each do |tdata|
@@ -300,6 +341,8 @@ describe "Hayabusa" do
         raise e
       end
     end
+  end
+  
   end
   
   it "should be able to stop." do

@@ -1,41 +1,91 @@
+require "tempfile"
+
 #This class parses and handels post-multipart requests.
 class Hayabusa::Http_session::Post_multipart
+  #This hash contains all the data read from the post-request.
   attr_reader :return
   
   def initialize(args)
     @args = args
-    boundary_regexp = /\A--#{@args["boundary"]}(--)?#{@args["crlf"]}\z/
+    crlf = args[:crlf]
+    
+    boundary_regexp = /\A--#{Regexp.escape(@args[:boundary])}(--)?(\r\n|\n|$)\z/
     @return = {}
     @data = nil
     @mode = nil
+    @clength = 0
     @headers = {}
     @counts = {}
+    str_crlf = nil
     
-    @args["io"].each do |line|
+    @args[:io].each do |line|
       if boundary_regexp =~ line
         #Finish the data we were writing.
         self.finish_data if @data
         
-        @data = ""
+        @data_first = true
+        @data_written = 0
+        @clength = nil
+        @name = nil
         @mode = "headers"
+        str_crlf = nil
       elsif @mode == "headers"
-        if match = line.match(/^(.+?):\s+(.+)#{@args["crlf"]}$/)
-          @headers[match[1].to_s.downcase] = match[2]
-        elsif line == @args["crlf"]
+        if match = line.match(/^(.+?):\s+(.+)#{crlf}$/)
+          key = match[1].to_s.downcase
+          val = match[2]
+          
+          @headers[key] = val
+          
+          if key == "content-length"
+            @clength = val.to_i
+          elsif key == "content-disposition"
+            #Figure out value-name in post-hash.
+            match_name = val.match(/name=\"(.+?)\"/)
+            raise "Could not match name." if !match_name
+            @name = match_name[1]
+            
+            #Fix count with name if given as increamental [].
+            if match = @name.match(/^(.+)\[\]$/)
+              if !@counts.key?(match[1])
+                @counts[match[1]] = 0
+              else
+                @counts[match[1]] += 1
+              end
+              
+              @name = "#{match[1]}[#{@counts[match[1]]}]"
+            end
+            
+            #Figure out actual filename.
+            if match_fname = val.match(/filename=\"(.+?)\"/)
+              @fname = match_fname[1]
+              @data = Tempfile.new("hayabusa_http_session_post_multipart")
+            else
+              @data = ""
+            end
+          end
+        elsif line == crlf
           @mode = "body"
         else
           raise "Could not match header from: '#{line}'."
         end
       elsif @mode == "body"
-        @data << line
-      elsif line == @args["crlf"] and !@mode
+        match = line.match(/^(.*?)(\r\n|\n)$/)
+        str = "#{str_crlf}#{match[1]}"
+        str_crlf = match[2]
+        
+        @data_written += str.bytesize
+        @data << str
+        
+        self.finish_data if @clength and @data_written >= @clength
+      elsif !@mode and (line == crlf or line == "\n" or line == "\r\n")
         #ignore.
       else
-        raise "Invalid mode: '#{@mode}' for line: '#{line}'."
+        line_str = line.gsub("\r", "\\r").gsub("\n", "\\n").gsub("\t", "\\t")
+        raise "Invalid mode: '#{@mode}' (#{@mode.class.name}) for line: '#{line}' (#{line_str}) for total post-string:\n#{@args[:io].string}"
       end
     end
     
-    self.finish_data if @data and @data.to_s.length > 0
+    self.finish_data if @data
     
     @data = nil
     @headers = nil
@@ -45,50 +95,37 @@ class Hayabusa::Http_session::Post_multipart
   
   #Add the current treated data to the return-hash.
   def finish_data
-    @data.chop!
-    name = nil
-    
-    disp = @headers["content-disposition"]
-    raise "No 'content-disposition' was given." if !disp
-    
-    
-    #Figure out value-name in post-hash.
-    match_name = disp.match(/name=\"(.+?)\"/)
-    raise "Could not match name." if !match_name
-    name = match_name[1]
-    
-    
-    #Fix count with name if given as increamental [].
-    if match = name.match(/^(.+)\[\]$/)
-      if !@counts.key?(match[1])
-        @counts[match[1]] = 0
-      else
-        @counts[match[1]] += 1
-      end
+    if @headers.empty? and @data_written == 0
+      @data.close(true) if @data.is_a?(Tempfile)
       
-      name = "#{match[1]}[#{@counts[match[1]]}]"
+      self.reset_data
+      return nil
     end
     
+    @data.close(false) if @data.is_a?(Tempfile)
+    raise "No 'content-disposition' was given (#{@headers}) (#{@data})." if !@name
     
-    #Figure out actual filename.
-    match_fname = disp.match(/filename=\"(.+?)\"/)
-    
-    if match_fname
+    if @fname
       obj = Hayabusa::Http_session::Post_multipart::File_upload.new(
-        "fname" => match_fname[1],
-        "headers" => @headers,
-        "data" => @data
+        :fname => @fname,
+        :headers => @headers,
+        :data => @data
       )
-      @return[name] = obj
-      @data = nil
-      @headers = {}
-      @mode = nil
+      @return[@name] = obj
     else
-      @return[name] = @data
-      @data = nil
-      @headers = {}
-      @mode = nil
+      @return[@name] = @data
     end
+    
+    self.reset_data
+  end
+  
+  def reset_data
+    @data = nil
+    @name = nil
+    @fname = nil
+    @headers = {}
+    @mode = nil
+    @clength = 0
   end
 end
 
@@ -100,27 +137,27 @@ class Hayabusa::Http_session::Post_multipart::File_upload
   
   #Returns the size of the upload.
   def size
-    return @args["data"].length
+    return @args[:data].length
   end
   
   #Returns the size of the fileupload.
   def length
-    return @args["data"].length
+    return @args[:data].length
   end
   
   #Returns the filename given for the fileupload.
   def filename
-    return @args["fname"]
+    return @args[:fname]
   end
   
   #Returns the headers given for the fileupload. Type and more should be here.
   def headers
-    return @args["headers"]
+    return @args[:headers]
   end
   
   #Returns the content of the file-upload as a string.
   def to_s
-    return @args["data"]
+    return File.read(@args[:data].path)
   end
   
   #Saves the content of the fileupload to a given path.

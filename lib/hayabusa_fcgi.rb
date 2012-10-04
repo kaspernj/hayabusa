@@ -44,7 +44,7 @@ class Hayabusa::Fcgi
     File.open(fcgi_config_fp) do |fp|
       fp.flock(File::LOCK_EX)
       
-      fcgi_config_cont = File.read(fcgi_config_fp)
+      fcgi_config_cont = File.read(fcgi_config_fp) rescue ""
       if !fcgi_config_cont.empty?
         #Seems like an instance is already running - check PID to be sure.
         fcgi_config = Marshal.load(File.read(fcgi_config_fp))

@@ -1,15 +1,21 @@
 #coding: utf-8
 
 def _(str)
-  hb = _hb
-  session = Thread.current[:hayabusa][:session].sess_data if Thread.current[:hayabusa] and Thread.current[:hayabusa][:session]
+  thread = Thread.current
+  thread_hayabusa = thread[:hayabusa]
+  raise "Could not register Hayabusa-data." if !thread_hayabusa
+  hb = thread_hayabusa[:hb]
+  raise "Could not register Hayabusa." if !hb
+  raise "'gettext' not enabled for Hayabusa." if !hb.gettext
+  
+  session = thread_hayabusa[:session].sess_data if thread_hayabusa[:session]
   locale = nil
   
-  if Thread.current[:locale].to_s.length > 0
-    locale = Thread.current[:locale]
-  elsif session and session[:locale].to_s.strip.length > 0
+  if !thread[:locale].to_s.empty?
+    locale = thread[:locale]
+  elsif session and !session[:locale].to_s.strip.empty?
     locale = session[:locale]
-  elsif hb and hb.config[:locale_default].to_s.strip.length > 0
+  elsif hb and !hb.config[:locale_default].to_s.strip.empty?
     session[:locale] = hb.config[:locale_default] if session
     locale = hb.config[:locale_default]
   elsif !session and !hb
