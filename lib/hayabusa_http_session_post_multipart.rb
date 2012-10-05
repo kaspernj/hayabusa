@@ -8,6 +8,7 @@ class Hayabusa::Http_session::Post_multipart
   def initialize(args)
     @args = args
     crlf = args[:crlf]
+    crlf_len = crlf.length
     
     boundary_regexp = /\A--#{Regexp.escape(@args[:boundary])}(--)?(\r\n|\n|$)\z/
     @return = {}
@@ -30,7 +31,6 @@ class Hayabusa::Http_session::Post_multipart
         #Finish the data we were writing.
         self.finish_data if @data
         
-        @data_first = true
         @data_written = 0
         @clength = nil
         @name = nil
@@ -76,9 +76,13 @@ class Hayabusa::Http_session::Post_multipart
           raise "Could not match header from: '#{line}'."
         end
       elsif @mode == "body"
-        match = line.match(/^(.*?)(\r\n|\n)$/)
-        str = "#{str_crlf}#{match[1]}"
-        str_crlf = match[2]
+        if line[-crlf_len, crlf_len] == crlf
+          str = line[0, line.length - crlf_len]
+          str_crlf = crlf
+        else
+          str = line
+          str_crlf = nil
+        end
         
         @data_written += str.bytesize
         @data << str
