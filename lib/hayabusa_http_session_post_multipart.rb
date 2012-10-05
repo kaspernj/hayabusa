@@ -19,7 +19,14 @@ class Hayabusa::Http_session::Post_multipart
     str_crlf = nil
     
     @args[:io].each do |line|
-      if boundary_regexp =~ line
+      begin
+        boundary_match = line.match(boundary_regexp)
+      rescue ArgumentError
+        #Happens when "invalid byte sequence in UTF-8" - the boundary-line will be UTF-8-valid and match the 'boundary_regexp'.
+        boundary_match = false
+      end
+      
+      if boundary_match
         #Finish the data we were writing.
         self.finish_data if @data
         
