@@ -100,7 +100,7 @@ describe "Hayabusa" do
       
       data = JSON.parse(res.body)
       
-      if data["testfile"] != File.read(fpath)
+      if data["testfile"]["val"] != File.read(fpath)
         File.open("/tmp/hayabusa_spec_testfile1", "w") do |fp|
           fp.puts("Class: #{data["testfile"].class.name}")
           fp.write(data["testfile"])
@@ -112,10 +112,10 @@ describe "Hayabusa" do
         
         raise "Expected uploaded data for mode '#{tdata[:name]}' to be the same but it wasnt:\n\"#{data["testfile"]}\"\n\n\"#{File.read(fpath)}\""
       end
+      
+      raise "Expected 'testfile' class to be 'Hayabusa::Http_session::Post_multipart::File_upload' in mode '#{tdata[:name]}' but it wasnt: '#{data["testfile"]["class"]}'." if data["testfile"]["class"] != "Hayabusa::Http_session::Post_multipart::File_upload"
     end
   end
-  
-  if false
   
   it "should be able to handle a GET-request." do
     $testmodes.each do |tdata|
@@ -341,8 +341,6 @@ describe "Hayabusa" do
         raise e
       end
     end
-  end
-  
   end
   
   it "should be able to stop." do

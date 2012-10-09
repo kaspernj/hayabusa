@@ -2,14 +2,19 @@ class Hayabusa::Cgi_tools
   attr_accessor :cgi
   
   #Converts CGI-like-post hashes to the normal Hayabusa-type hash.
-  def convert_fcgi_post(params)
+  def convert_fcgi_post(params, args = nil)
     post_hash = {}
     
     params.each do |key, realval|
       val = realval.first
       
       #Sometimes uploaded files are given as StringIO's.
-      val = val.string if val.is_a?(StringIO)
+      if val.is_a?(StringIO)
+        val = Hayabusa::Http_session::Post_multipart::File_upload.new(
+          :fname => val.original_filename,
+          :data => val
+        )
+      end
       
       post_hash[key] = val
     end
@@ -20,6 +25,22 @@ class Hayabusa::Cgi_tools
     end
     
     return post_ret
+  end
+  
+  #Converts the post-hash to valid hash for Http2 regarding file uploads (when proxied to host-process via Http2-framework).
+  def convert_fcgi_post_fileuploads_to_http2(hash)
+    hash.each do |key, val|
+      if val.is_a?(Hayabusa::Http_session::Post_multipart::File_upload)
+        hash[key] = {
+          :filename => val.filename,
+          :content => val.to_s
+        }
+      elsif val.is_a?(Hash) or val.is_a?(Array)
+        hash[key] = self.convert_fcgi_post_fileuploads_to_http2(val)
+      end
+    end
+    
+    return hash
   end
   
   def env_table
@@ -91,7 +112,7 @@ class Hayabusa::Cgi_tools
         count = 0
         http.post_multipart(
           :url => url,
-          :post => self.convert_fcgi_post(cgi.params),
+          :post => self.convert_fcgi_post_fileuploads_to_http2(self.convert_fcgi_post(cgi.params, :http2_compatible => true)),
           :default_headers => headers,
           :cookies => false,
           :on_content => proc{|line|
@@ -103,7 +124,7 @@ class Hayabusa::Cgi_tools
         count = 0
         http.post(
           :url => url,
-          :post => self.convert_fcgi_post(cgi.params),
+          :post => self.convert_fcgi_post(cgi.params, :http2_compatible => true),
           :default_headers => headers,
           :cookies => false,
           :on_content => proc{|line|

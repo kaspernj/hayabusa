@@ -167,18 +167,35 @@ class Hayabusa::Http_session::Post_multipart::File_upload
   
   #Returns the content of the file-upload as a string.
   def to_s
-    return File.read(@args[:data].path)
+    if @args[:data].is_a?(StringIO)
+      return @args[:data].string
+    else
+      return File.read(@args[:data].path)
+    end
   end
   
   #Returns an IO to read from the upload wherever it is a temporary file or a string.
   def io(&blk)
-    return File.open(@args[:data].path, "r", &blk)
+    if @args[:data].is_a?(StringIO)
+      return @args[:data]
+    else
+      return File.open(@args[:data].path, "r", &blk)
+    end
   end
   
   #Saves the content of the fileupload to a given path.
   def save_to(filepath)
     File.open(filepath, "w") do |fp|
-      fp.write(self.to_s)
+      if @args[:data].is_a?(StringIO)
+        fp.write(@args[:data].string)
+      else
+        #Stream output to avoid using too much memory.
+        self.io do |fp_read|
+          fp_read.lines do |line|
+            fp.write(line)
+          end
+        end
+      end
     end
   end
   
