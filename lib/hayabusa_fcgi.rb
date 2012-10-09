@@ -57,7 +57,7 @@ class Hayabusa::Fcgi
             Knj.gem_require(:Http2)
             
             begin
-              @fcgi_proxy[:http] = Http2.new(:host => "localhost", :port => @fcgi_proxy[:port].to_i)
+              @fcgi_proxy[:http] = Http2.new(:host => "localhost", :port => @fcgi_proxy[:port].to_i, :raise_errors => false)
             rescue Errno::ECONNREFUSED
               #The host-process has properly closed - evaluate mode again.
               raise Errno::EAGAIN
@@ -84,11 +84,23 @@ class Hayabusa::Fcgi
         cmd << " --title=#{Knj::Strings.unixsafe(hayabusa_conf[:title])}" if hayabusa_conf[:title]
         
         $stderr.puts("Executing command to start FCGI-server: #{cmd}")
-        io_out, io_in, io_err = Open3.popen3(cmd)
+        
+        if RUBY_ENGINE == "jruby"
+          pid, io_out, io_in, io_err = IO.popen4(cmd)
+        else
+          io_out, io_in, io_err, wait_thr = Open3.popen3(cmd)
+          pid = wait_thr.pid
+        end
         
         #Get data that should contain PID and port.
         read = io_in.gets
-        raise "Host-process didnt return required data." if !read
+        
+        if !read and !Knj::Unix_proc.pid_running?(pid)
+          err_str = io_err.read
+          raise "An error occurred while trying to start host-process: #{err_str}" if !err_str.to_s.strip.empty?
+          raise "Host-process died unexpectedly with no read, PID '#{pid}' and using cmd '#{cmd}'." 
+          raise "Host-process didnt return required data."
+        end
         
         #Parse data from the host-process (port and PID).
         begin
