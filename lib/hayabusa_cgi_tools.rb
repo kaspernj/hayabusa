@@ -1,3 +1,5 @@
+require "tempfile"
+
 class Hayabusa::Cgi_tools
   attr_accessor :cgi
   
@@ -7,9 +9,10 @@ class Hayabusa::Cgi_tools
     
     params.each do |key, realval|
       val = realval.first
+      classn = val.class.name
       
       #Sometimes uploaded files are given as StringIO's.
-      if val.is_a?(StringIO)
+      if classn == "StringIO" or classn == "Tempfile"
         val = Hayabusa::Http_session::Post_multipart::File_upload.new(
           :fname => val.original_filename,
           :data => val

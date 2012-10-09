@@ -2,18 +2,18 @@
   pdata = {}
   _post.each do |key, val|
     data = {
-      :class => val.class.name
+      "class" => val.class.name
     }
     
     if val.is_a?(Hayabusa::Http_session::Post_multipart::File_upload)
-      data[:val] = val.to_s
+      data["val"] = val.to_s
     else
-      data[:val] = val
+      data["val"] = val
     end
     
     pdata[key] = data
   end
   
   require "json"
-  print JSON.generate(pdata)
+  print Marshal.dump(pdata)
 %>
