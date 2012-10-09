@@ -170,6 +170,11 @@ class Hayabusa::Http_session::Post_multipart::File_upload
     return File.read(@args[:data].path)
   end
   
+  #Returns an IO to read from the upload wherever it is a temporary file or a string.
+  def io(&blk)
+    return File.open(@args[:data].path, "r", &blk)
+  end
+  
   #Saves the content of the fileupload to a given path.
   def save_to(filepath)
     File.open(filepath, "w") do |fp|
