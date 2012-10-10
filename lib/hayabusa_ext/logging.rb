@@ -308,8 +308,6 @@ class Hayabusa
       html = $stdout
     end
     
-    html = ""
-    
     html << "<table class=\"list hayabusa_log_table\">"
     html << "<thead>"
     html << "<tr>"
