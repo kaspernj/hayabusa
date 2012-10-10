@@ -46,7 +46,7 @@ class Hayabusa
     @mails_mutex.synchronize do
       self.log_puts("Flushing mails.") if @debug
       
-      if @mails_waiting.length <= 0
+      if @mails_waiting.empty?
         self.log_puts("No mails to flush - skipping.") if @debug
         return false
       end
