@@ -77,10 +77,10 @@ class Hayabusa::Http_session::Post_multipart
         end
       elsif @mode == "body"
         if line[-crlf_len, crlf_len] == crlf
-          str = line[0, line.length - crlf_len]
+          str = "#{str_crlf}#{line[0, line.length - crlf_len]}"
           str_crlf = crlf
         else
-          str = line
+          str = "#{str_crlf}#{line}"
           str_crlf = nil
         end
         
