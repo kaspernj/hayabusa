@@ -10,35 +10,6 @@ class Hayabusa
     _httpsession.eruby.import(filepath)
   end
   
-  #Redirects to another URL.
-  #===Examples
-  #  _hb.redirect("someotherpage.rhtml")
-  #  _hb.redirect("newpage.rhtml", :perm => true)
-  def redirect(url, args = {})
-    #Header way
-    if !_httpsession.alert_sent and !self.headers_sent?
-      if args[:perm]
-        _httpsession.resp.status = 301 if !self.headers_sent?
-      else
-        _httpsession.resp.status = 303 if !self.headers_sent?
-      end
-      
-      self.header("Location", url) if !self.headers_sent?
-    end
-    
-    print "<script type=\"text/javascript\">location.href=\"#{url}\";</script>"
-    exit
-  end
-  
-  #Sends a javascript-alert to the HTML.
-  #===Examples
-  #  _hb.alert("Hello world!")
-  def alert(msg)
-    _httpsession.alert_sent = true
-    Knj::Web.alert(msg)
-    return self
-  end
-  
   #Define a cookies in the clients browser.
   #===Examples
   #  _hb.cookie(:name => "MyCookie", :value => "Trala")
@@ -120,11 +91,6 @@ class Hayabusa
     
     httpsess.force_content(:type => :file, :path => filepath)
     return nil
-  end
-  
-  #Sends a javascript back to the browser and exits.
-  def back
-    Knj::Web.back
   end
   
   #Draw a input in a table.
