@@ -10,6 +10,7 @@ gem "datet"
 gem "http2"
 gem "tpool"
 gem "fcgi"
+gem "ruby_process"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.

@@ -60,17 +60,17 @@ class Hayabusa
       
       #Use subprocessing to avoid the mail-framework (activesupport and so on, also possible memory leaks in those large frameworks).
       self.log_puts("Starting subprocess for mailing.") if @debug
-      Knj::Process_meta.new("debug" => @debug, "debug_err" => true, "id" => "hayabusa_mailing") do |subproc|
-        subproc.static("Object", "require", "rubygems")
-        subproc.static("Object", "require", "mail")
-        subproc.static("Object", "require", "#{@config[:knjrbfw_path]}knjrbfw")
-        subproc.static("Object", "require", "knj/autoload")
+      Ruby_process::Cproxy.run do |data|
+        subproc = data[:subproc]
+        subproc.static(:Object, :require, "rubygems")
+        subproc.static(:Object, :require, "mail")
+        subproc.static(:Object, :require, "#{Knj.knjrbfw_path}/../knjrbfw.rb")
         
         self.log_puts("Flushing emails.") if @debug
         @mails_waiting.each do |mail|
           begin
             self.log_puts("Sending email: #{mail.__id__}") if @debug
-            if mail.send("proc" => subproc)
+            if mail.send(:proc => subproc)
               self.log_puts("Email sent: #{mail.__id__}") if @debug
               @mails_waiting.delete(mail)
             end
@@ -119,24 +119,18 @@ class Hayabusa
     def send(args = {})
       @args[:hb].log_puts("Sending mail '#{__id__}'.") if @args[:hb].debug
       
-      if args["proc"]
-        args["proc"].static("Object", "require", "knj/mailobj")
-        mail = args["proc"].new("Knj::Mailobj", @args[:hb].config[:smtp_args])
-        mail._pm_send_noret("to=", @args[:to])
-        mail._pm_send_noret("subject=", @args[:subject]) if @args[:subject]
-        mail._pm_send_noret("html=", Knj::Strings.email_str_safe(@args[:html])) if @args[:html]
-        mail._pm_send_noret("text=", Knj::Strings.email_str_safe(@args[:text])) if @args[:text]
-        mail._pm_send_noret("from=", @args[:from])
-        mail._pm_send_noret("send")
+      if args[:proc]
+        mail = args[:proc].new("Knj::Mailobj", @args[:hb].config[:smtp_args])
       else
         mail = Knj::Mailobj.new(@args[:hb].config[:smtp_args])
-        mail.to = @args[:to]
-        mail.subject = @args[:subject] if @args[:subject]
-        mail.html = Knj::Strings.email_str_safe(@args[:html]) if @args[:html]
-        mail.text = Knj::Strings.email_str_safe(@args[:text]) if @args[:text]
-        mail.from = @args[:from]
-        mail.send
       end
+      
+      mail.to = @args[:to]
+      mail.subject = @args[:subject] if @args[:subject]
+      mail.html = Knj::Strings.email_str_safe(@args[:html]) if @args[:html]
+      mail.text = Knj::Strings.email_str_safe(@args[:text]) if @args[:text]
+      mail.from = @args[:from]
+      mail.send
       
       @args[:status] = :sent
       @args[:hb].log_puts("Sent email #{self.__id__}") if @args[:hb].debug
