@@ -1,7 +1,7 @@
 <%
   if _get["choice"] == "dogarbagecollect"
     GC.start
-    _hb.redirect("?show=debug_memory_usage")
+    Knj::Web.redirect("?show=debug_memory_usage")
   end
 %>
 

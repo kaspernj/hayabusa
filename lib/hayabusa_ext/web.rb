@@ -100,7 +100,7 @@ class Hayabusa
   
   #Urlencodes a string.
   #===Examples
-  #  _hb.redirect("mypage.rhtml?arg=#{_hb.urlenc(value_variable)}")
+  #  Knj::Web.redirect("mypage.rhtml?arg=#{_hb.urlenc(value_variable)}")
   def urlenc(str)
     return Knj::Web.urlenc(str)
   end
