@@ -34,7 +34,7 @@ class Hayabusa
       :default_filetype => "text/html",
       :max_requests_working => 20,
       :size_send => 1024,
-      :cleaner_timeout => 300,
+      :cleaner_timeout => 60,
       :mailing_time => 30
     }.merge(config)
     

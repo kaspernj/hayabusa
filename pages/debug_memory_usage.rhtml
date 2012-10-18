@@ -1,5 +1,6 @@
 <%
   if _get["choice"] == "dogarbagecollect"
+    _hb.clean
     GC.start
     Knj::Web.redirect("?show=debug_memory_usage")
   end
@@ -11,6 +12,23 @@
   <input type="button" value="Garbage collect" onclick="location.href='?show=debug_memory_usage&amp;choice=dogarbagecollect';" />
 </div>
 
+
+<h1>Hayabusa sessions</h1>
+<table style="width: 600px;">
+  <tbody>
+    <tr>
+      <td>Active sessions</td>
+      <td><%=_hb.num(_hb.sessions.length, 0)%></td>
+    </tr>
+    <tr>
+      <td>Total sessions</td>
+      <td><%=_hb.num(_hb.ob.list(:Session, "count" => true), 0)%>
+    </tr>
+  </tbody>
+</table>
+
+<br />
+
 <%
-  Knj::Memory_analyzer.new.write
+  #Knj::Memory_analyzer.new.write
 %>

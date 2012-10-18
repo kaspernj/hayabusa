@@ -9,7 +9,6 @@ class Hayabusa
   
   def clean
     self.clean_sessions
-    self.clean_autorestart
   end
   
   def clean_autorestart
@@ -109,12 +108,14 @@ class Hayabusa
     session_not_ids = []
     time_check = Time.now.to_i - 300
     newsessions = {}
-    @sessions.each do |session_hash, session_data|
+    @sessions.delete_if do |session_hash, session_data|
       session_data[:dbobj].flush
       
-      if session_data[:time_lastused].to_i > time_check
-        newsessions[session_hash] = session_data
+      if session_data[:dbobj].date_lastused.to_i > time_check
         session_not_ids << session_data[:dbobj].id
+        false
+      else
+        true
       end
     end
     

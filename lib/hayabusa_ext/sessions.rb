@@ -1,4 +1,6 @@
 class Hayabusa
+  attr_reader :sessions
+  
   def initialize_sessions
     @sessions = Tsafe::MonHash.new
   end
@@ -13,8 +15,11 @@ class Hayabusa
         session = @ob.add(:Session, {
           :idhash => idhash,
           :user_agent => meta["HTTP_USER_AGENT"],
-          :ip => ip
+          :ip => ip,
+          :date_lastused => Time.now
         })
+      else
+        session[:date_lastused] = Time.now
       end
       
       hash = {}
@@ -28,8 +33,6 @@ class Hayabusa
     end
     
     raise ArgumentError, "Invalid IP." if ip != "bot" and !session.remember? and ip.to_s != session[:ip].to_s
-    
-    @sessions[idhash][:time_lastused] = Time.now
     return [session, hash]
   end
   

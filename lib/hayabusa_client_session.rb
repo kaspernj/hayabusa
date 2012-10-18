@@ -22,6 +22,11 @@ class Hayabusa::Client_session
     @cgroup.force_content(newcont)
   end
   
+  #Forces the output to be read from a file.
+  def force_fileread(fpath)
+    @cgroup.new_io(:type => :file, :path => fpath)
+  end
+  
   #Creates a new Hayabusa::Binding-object and returns the binding for that object.
   def create_binding
     return Hayabusa::Http_session::Page_environment.new(:httpsession => self, :hb => @hb).get_binding
