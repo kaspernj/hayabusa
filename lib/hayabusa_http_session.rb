@@ -82,31 +82,35 @@ class Hayabusa::Http_session < Hayabusa::Client_session
             @handler.socket_parse(@socket)
           end
           
-          @hb.log_puts "#{__id__} - Done parsing from socket." if @debug
-          
-          while @hb.paused? #Check if we should be waiting with executing the pending request.
-            @hb.log_puts "#{__id__} - Paused! (#{@hb.paused}) - sleeping." if @debug
-            sleep 0.1
-          end
-          
-          break if @hb.should_restart
-          
-          if max_requests_working and @httpserver
-            while @httpserver.working_count.to_i >= max_requests_working
-              @hb.log_puts "#{__id__} - Maximum amounts of requests are working (#{@httpserver.working_count}, #{max_requests_working}) - sleeping." if @debug
+          begin
+            @hb.log_puts "#{__id__} - Done parsing from socket." if @debug
+            
+            while @hb.paused? #Check if we should be waiting with executing the pending request.
+              @hb.log_puts "#{__id__} - Paused! (#{@hb.paused}) - sleeping." if @debug
               sleep 0.1
             end
-          end
-          
-          #Reserve database connections.
-          @hb.db_handler.get_and_register_thread if @hb.db_handler.opts[:threadsafe]
-          @hb.ob.db.get_and_register_thread if @hb.ob.db.opts[:threadsafe]
-          
-          @working = true
-          @hb.log_puts "#{__id__} - Serving." if @debug
-          
-          @httpserver.count_block do
-            self.serve
+            
+            break if @hb.should_restart
+            
+            if max_requests_working and @httpserver
+              while @httpserver.working_count.to_i >= max_requests_working
+                @hb.log_puts "#{__id__} - Maximum amounts of requests are working (#{@httpserver.working_count}, #{max_requests_working}) - sleeping." if @debug
+                sleep 0.1
+              end
+            end
+            
+            #Reserve database connections.
+            @hb.db_handler.get_and_register_thread if @hb.db_handler.opts[:threadsafe]
+            @hb.ob.db.get_and_register_thread if @hb.ob.db.opts[:threadsafe]
+            
+            @working = true
+            @hb.log_puts "#{__id__} - Serving." if @debug
+            
+            @httpserver.count_block do
+              self.serve
+            end
+          ensure
+            @handler.delete_tempfiles
           end
         ensure
           @hb.log_puts "#{__id__} - Closing request." if @debug

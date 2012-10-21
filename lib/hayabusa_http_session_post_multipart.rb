@@ -17,6 +17,7 @@ class Hayabusa::Http_session::Post_multipart
     @clength = 0
     @headers = {}
     @counts = {}
+    @files_arr = args[:files_arr]
     str_crlf = nil
     
     @args[:io].each do |line|
@@ -113,6 +114,7 @@ class Hayabusa::Http_session::Post_multipart
     end
     
     @data.close(false) if @data.is_a?(Tempfile)
+    @files_arr << @data.path
     raise "No 'content-disposition' was given (#{@headers}) (#{@data})." if !@name
     
     if @fname
@@ -202,5 +204,9 @@ class Hayabusa::Http_session::Post_multipart::File_upload
   #This methods prevents the object from being converted to JSON. This can make some serious bugs.
   def to_json(*args)
     raise "File_upload-objects should not be converted to json."
+  end
+  
+  def unset
+    
   end
 end

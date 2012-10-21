@@ -7,7 +7,7 @@ end
 
 #This class parses the various HTTP requests into easy programmable objects. Get, post, cookie, meta and so on...
 class Hayabusa::Http_session::Request
-  attr_reader :get, :post, :cookie, :meta, :page_path, :headers, :http_version, :read, :clength, :speed, :percent, :secs_left
+  attr_reader :get, :post, :cookie, :files_arr, :meta, :page_path, :headers, :http_version, :read, :clength, :speed, :percent, :secs_left
   
   #Sets the various required data on the object. Hayabusa, crlf and arguments.
   def initialize(args)
@@ -79,6 +79,7 @@ class Hayabusa::Http_session::Request
     
     @page_path = "#{@hb.config[:doc_root]}/#{page_filepath}"
     @get = Knj::Web.parse_urlquery(uri[:query], :urldecode => true, :force_utf8 => true)
+    @files_arr = []
     
     if @get["_hb_httpsession_id"]
       @hb.httpsessions_ids[@get["_hb_httpsession_id"]] = @args[:httpsession]
@@ -187,7 +188,8 @@ class Hayabusa::Http_session::Request
           post_treated = Hayabusa::Http_session::Post_multipart.new(
             :io => post_data,
             :boundary => match[1],
-            :crlf => @crlf
+            :crlf => @crlf,
+            :files_arr => @files_arr
           ).return
           post_data.close(true)
           
@@ -235,6 +237,14 @@ class Hayabusa::Http_session::Request
   def convert_post(seton, post_val, args = {})
     post_val.each do |varname, value|
       Knj::Web.parse_name(seton, varname, value, args)
+    end
+  end
+  
+  #Deletes all tempfiles created by this object.
+  def delete_tempfiles
+    @files_arr.delete_if do |tempfile_path|
+      File.unlink(tempfile_path)
+      true
     end
   end
 end
