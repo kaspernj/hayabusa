@@ -16,10 +16,10 @@ class Hayabusa
   end
   
   #Inits the thread so it has access to the appserver and various magic methods can be used.
-  def thread_init(thread = nil)
-    thread = Thread.current if thread == nil
+  def thread_init(thread = Thread.current)
     thread[:hayabusa] = {} if !thread[:hayabusa]
     thread[:hayabusa][:hb] = self
+    return nil
   end
   
   #Spawns a new thread with access to magic methods, _db-method and various other stuff in the appserver.
@@ -72,7 +72,7 @@ class Hayabusa
     thread[:hayabusa][:hb] = self
     
     begin
-      block.call
+      return block.call
     ensure
       @ob.db.free_thread if @ob.db.opts[:threadsafe]
       @db_handler.free_thread if @db_handler.opts[:threadsafe]
