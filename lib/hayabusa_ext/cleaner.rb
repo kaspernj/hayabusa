@@ -107,7 +107,6 @@ class Hayabusa
     #Clean up various inactive sessions.
     session_not_ids = []
     time_check = Time.now.to_i - 300
-    newsessions = {}
     @sessions.delete_if do |session_hash, session_data|
       session_data[:dbobj].flush
       
@@ -118,8 +117,6 @@ class Hayabusa
         true
       end
     end
-    
-    @sessions = newsessions
     
     self.log_puts("Delete sessions...") if @debug
     @ob.list(:Session, {"id_not" => session_not_ids, "date_lastused_below" => (Time.now - 5356800)}) do |session|

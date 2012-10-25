@@ -2,6 +2,12 @@
   if _get["choice"] == "dogarbagecollect"
     _hb.clean
     GC.start
+    
+    #Clean all Knj::Objects used in the application.
+    ObjectSpace.each_object(Knj::Objects) do |objects|
+      objects.clean_all
+    end
+    
     Knj::Web.redirect("?show=debug_memory_usage")
   end
 %>
@@ -11,7 +17,6 @@
 <div style="padding-bottom: 15px;">
   <input type="button" value="Garbage collect" onclick="location.href='?show=debug_memory_usage&amp;choice=dogarbagecollect';" />
 </div>
-
 
 <h1>Hayabusa sessions</h1>
 <table style="width: 600px;">
