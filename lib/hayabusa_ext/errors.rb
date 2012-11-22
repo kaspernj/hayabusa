@@ -116,7 +116,7 @@ class Hayabusa
     begin
       block.call
     rescue => e
-      self.alert(e.message).back
+      Knj::Web.alert(e.message).back
     end
   end
   

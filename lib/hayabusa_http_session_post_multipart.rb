@@ -113,8 +113,11 @@ class Hayabusa::Http_session::Post_multipart
       return nil
     end
     
-    @data.close(false) if @data.is_a?(Tempfile)
-    @files_arr << @data.path
+    if @data.is_a?(Tempfile)
+      @data.close(false)
+      @files_arr << @data.path if @data.respond_to?(:path)
+    end
+    
     raise "No 'content-disposition' was given (#{@headers}) (#{@data})." if !@name
     
     if @fname
