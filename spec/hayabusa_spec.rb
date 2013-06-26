@@ -63,21 +63,34 @@ describe "Hayabusa" do
     
     raise "Expected thread-pool-priority to be '-3' but it wasnt: '#{$appserver.threadpool.args[:priority]}'." if $appserver.threadpool.args[:priority] != -3
     
-    http = Http2.new(:host => "localhost", :port => 80, :encoding_gzip => false, :debug => false)
+    http = Http2.new(:host => "localhost", :port => 80, :encoding_gzip => false, :debug => false) rescue nil
     
     $testmodes = [{
       :name => :standalone,
       :path_pre => "",
       :http => Http2.new(:host => "localhost", :port => 1515)
-    },{
-      :name => :cgi,
-      :path_pre => "hayabusa_cgi_test/",
-      :http => http
-    },{
-      :name => :fcgi,
-      :path_pre => "hayabusa_fcgi_test/",
-      :http => http
     }]
+    
+    if http
+      $testmodes += [{
+        :name => :cgi,
+        :path_pre => "hayabusa_cgi_test/",
+        :http => http
+      },{
+        :name => :fcgi,
+        :path_pre => "hayabusa_fcgi_test/",
+        :http => http
+      }]
+    end
+  end
+  
+  it "should be able to get multiple pictures" do
+    $testmodes.each do |tdata|
+      10.times do
+        res = tdata[:http].get("testpic.jpeg")
+        res.body.bytesize.should eql(File.size("#{File.dirname(__FILE__)}/../pages/testpic.jpeg"))
+      end
+    end
   end
   
   #it "should be able to handle custom urls" do
@@ -127,8 +140,6 @@ describe "Hayabusa" do
       end
     end
   end
-  
-  if false
   
   it "should be able to handle a GET-request." do
     $testmodes.each do |tdata|
@@ -354,8 +365,6 @@ describe "Hayabusa" do
         raise e
       end
     end
-  end
-  
   end
   
   it "should be able to stop." do
