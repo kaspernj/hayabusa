@@ -64,7 +64,7 @@ class Hayabusa::Fcgi
             end
             
             if hayabusa_conf[:debug]
-              @fcgi_proxy[:fp_log] = File.open("/tmp/hayabusa_#{hayabusa_conf[:hayabusa][:title]}_#{Process.pid}.log", "w")
+              @fcgi_proxy[:fp_log] = File.open("/tmp/hayabusa_#{hayabusa_conf[:title]}_#{Process.pid}.log", "w")
               @fcgi_proxy[:fp_log].sync = true
             end
           rescue

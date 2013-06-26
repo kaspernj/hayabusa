@@ -52,20 +52,20 @@ class Hayabusa
       [:Tpool, "tpool"]
     ]
     
-    gems.each do |gem|
-      if Kernel.const_defined?(gem[0])
-        puts "Gem already loaded: '#{gem[1]}'." if @debug
+    gems.each do |gem_i|
+      if Kernel.const_defined?(gem_i[0])
+        puts "Gem already loaded: '#{gem_i[1]}'." if @debug
         next
       end
       
-      fpath = "#{@@path}/../../#{gem[1]}/lib/#{gem[1]}.rb"
+      fpath = "#{@@path}/../../#{gem_i[1]}/lib/#{gem_i[1]}.rb"
       
       if File.exists?(fpath)
         puts "Loading custom gem-path: '#{fpath}'." if @debug
         require fpath
       else
-        puts "Loading gem: '#{gem[1]}'." if @debug
-        require gem[1]
+        puts "Loading gem: '#{gem_i[1]}'." if @debug
+        require gem_i[1]
       end
     end
     
