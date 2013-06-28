@@ -6,7 +6,7 @@ GEM
     erubis (2.7.0)
     fcgi (0.9.1)
     git (1.2.5)
-    http2 (0.0.18)
+    http2 (0.0.21)
     jeweler (1.6.4)
       bundler (~> 1.0)
       git (>= 1.2.5)

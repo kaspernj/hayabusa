@@ -102,12 +102,12 @@ describe "Hayabusa" do
         5.times do
           path = "#{File.dirname(__FILE__)}/../pages/testpic.jpeg"
           
-          res = tdata[:http].get("testpic.jpeg")
+          res = tdata[:http].get("#{tdata[:path_pre]}testpic.jpeg")
           res.body.bytesize.should eql(File.size(path))
           
           res.body.bytes.to_a.should eql(File.read(path).bytes.to_a)
           
-          res = tdata[:http].get("image.rhtml?force=true&path64=#{Base64.encode64("testpic.jpeg").to_s.strip}")
+          res = tdata[:http].get("#{tdata[:path_pre]}image.rhtml?force=true&path64=#{Base64.encode64("testpic.jpeg").to_s.strip}")
         end
       end
     ensure
