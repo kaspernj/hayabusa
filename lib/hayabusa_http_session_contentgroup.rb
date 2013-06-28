@@ -3,7 +3,7 @@
 #This class handels the adding of content and writing to socket. Since this can be done with multiple threads and multiple IO's it can get complicated.
 class Hayabusa::Http_session::Contentgroup
   attr_reader :done, :cur_data
-  attr_accessor :chunked, :socket
+  attr_accessor :chunked, :socket, :content_length, :length_written
   NL = "\r\n"
   
   def initialize(args = {})
@@ -13,6 +13,8 @@ class Hayabusa::Http_session::Contentgroup
     @httpsession = args[:httpsession]
     @mutex = Mutex.new
     @debug = false
+    @length_written = args[:length_written] ? args[:length_written] : 0
+    @content_length = args[:content_length]
   end
   
   def init
@@ -30,6 +32,7 @@ class Hayabusa::Http_session::Contentgroup
     @done = false
     @thread = nil
     @forced = false
+    @length_written = 0
     
     @mutex.synchronize do
       self.new_io
@@ -55,7 +58,7 @@ class Hayabusa::Http_session::Contentgroup
   end
   
   def new_thread
-    cgroup = Hayabusa::Http_session::Contentgroup.new(:socket => @socket, :chunked => @chunked)
+    cgroup = Hayabusa::Http_session::Contentgroup.new(:socket => @socket, :chunked => @chunked, :content_length => @content_length)
     cgroup.init
     
     @mutex.synchronize do
@@ -92,6 +95,8 @@ class Hayabusa::Http_session::Contentgroup
           STDERR.puts "Error while writing."
           STDERR.puts e.inspect
           STDERR.puts e.backtrace
+          
+          raise e
         end
       end
     end
@@ -125,7 +130,12 @@ class Hayabusa::Http_session::Contentgroup
     
     @ios.each do |data|
       if data.is_a?(Hayabusa::Http_session::Contentgroup)
+        data.length_written = @length_written
+        data.content_length = @content_length
+        data.chunked = @chunked
         data.write_to_socket
+        
+        @length_written += data.length_written
       elsif data.key?(:str)
         if data[:str].is_a?(Hash) and data[:str][:type] == :file
           File.open(data[:str][:path], "r") do |file|
@@ -135,6 +145,8 @@ class Hayabusa::Http_session::Contentgroup
               rescue EOFError
                 break
               end
+              
+              add_to_length_written(buf.bytesize)
               
               if @chunked
                 @socket.write("#{buf.length.to_s(16)}#{NL}#{buf}#{NL}")
@@ -157,6 +169,7 @@ class Hayabusa::Http_session::Contentgroup
             #512 could take a long time for big pages. 16384 seems to be an optimal number.
             str.each_slice(16384) do |slice|
               buf = slice.pack("C*")
+              add_to_length_written(buf.bytesize)
               
               if @chunked
                 @socket.write("#{buf.length.to_s(16)}#{NL}#{buf}#{NL}")
@@ -172,5 +185,11 @@ class Hayabusa::Http_session::Contentgroup
     end
     
     count += 1
+  end
+  
+  # Adds the given size to the length written and raises an exception if it exceeds the sat content-length.
+  def add_to_length_written(size)
+    @length_written += size
+    raise "Content-Length overwritten: #{@length_written}, #{@content_length}" if @content_length != nil && @length_written > @content_length
   end
 end

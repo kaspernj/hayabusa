@@ -68,7 +68,7 @@ describe "Hayabusa" do
     $testmodes = [{
       :name => :standalone,
       :path_pre => "",
-      :http => Http2.new(:host => "localhost", :port => 1515)
+      :http => Http2.new(:host => "localhost", :port => 1515, :debug => false)
     }]
     
     if http
@@ -85,11 +85,33 @@ describe "Hayabusa" do
   end
   
   it "should be able to get multiple pictures" do
-    $testmodes.each do |tdata|
-      10.times do
-        res = tdata[:http].get("testpic.jpeg")
-        res.body.bytesize.should eql(File.size("#{File.dirname(__FILE__)}/../pages/testpic.jpeg"))
+    require "base64"
+    require "RMagick"
+    
+    # Symlink 'image.rhtml' first.
+    img_from_path = "#{Knj.knjrbfw_path}/webscripts/image.rhtml"
+    img_to_path = "#{File.realpath("#{File.dirname(__FILE__)}/../pages")}/image.rhtml"
+    
+    raise "Invalid from path: '#{img_from_path}'." unless File.exists?(img_from_path)
+    
+    File.unlink(img_to_path) if File.symlink?(img_to_path)
+    File.symlink(img_from_path, img_to_path)
+    
+    begin
+      $testmodes.each do |tdata|
+        5.times do
+          path = "#{File.dirname(__FILE__)}/../pages/testpic.jpeg"
+          
+          res = tdata[:http].get("testpic.jpeg")
+          res.body.bytesize.should eql(File.size(path))
+          
+          res.body.bytes.to_a.should eql(File.read(path).bytes.to_a)
+          
+          res = tdata[:http].get("image.rhtml?force=true&path64=#{Base64.encode64("testpic.jpeg").to_s.strip}")
+        end
       end
+    ensure
+      File.unlink(img_to_path) if File.exists?(img_to_path)
     end
   end
   

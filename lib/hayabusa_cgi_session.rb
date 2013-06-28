@@ -110,8 +110,7 @@ class Hayabusa::Cgi_session < Hayabusa::Client_session
     rescue SystemExit
       #do nothing - ignore.
     rescue Timeout::Error
-      @resp.status = 500
-      print "The request timed out."
+      @resp.status = 408
     end
   end
   

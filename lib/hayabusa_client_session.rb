@@ -24,6 +24,9 @@ class Hayabusa::Client_session
   
   #Forces the output to be read from a file.
   def force_fileread(fpath)
+    raise "Invalid filepath given: '#{fpath}'." if !fpath || !File.exists?(fpath)
+    @resp.chunked = false
+    @resp.header("Content-Length", File.size(fpath))
     @cgroup.new_io(:type => :file, :path => fpath)
   end
   
@@ -87,6 +90,7 @@ class Hayabusa::Client_session
         if @handlers_cache.key?(@ext)
           @hb.log_puts("Calling handler.") if @debug
           @handlers_cache[@ext].call(self)
+          @hb.log_puts("Called handler.") if @debug
         else
           #check if we should use a handler for this request.
           @config[:handlers].each do |handler_info|
@@ -130,7 +134,7 @@ class Hayabusa::Client_session
                 end
               end
               
-              @cgroup.new_io(:type => :file, :path => @page_path)
+              self.force_fileread(@page_path)
             end
           end
         end
@@ -138,8 +142,8 @@ class Hayabusa::Client_session
     rescue SystemExit
       #do nothing - ignore.
     rescue Timeout::Error
-      @resp.status = 500
-      print "The request timed out."
+      @resp.status = 408
+      @hb.log_puts "The request timed out."
     end
   end
   
@@ -149,10 +153,7 @@ class Hayabusa::Client_session
     @hb.log_puts "#{__id__} - Served '#{@meta["REQUEST_URI"]}' in #{Time.now.to_f - @time_start} secs (#{@resp.status})." if @debug
     @time_start = nil
     @cgroup.join
-    
-    @hb.events.call(:request_done, {
-      :httpsession => self
-    }) if @hb.events
+    @hb.events.call(:request_done, :httpsession => self) if @hb.events
     @httpsession_var = {}
   end
 end

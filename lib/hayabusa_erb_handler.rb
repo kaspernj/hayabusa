@@ -20,7 +20,7 @@ class Hayabusa::Erb_handler
     httpsess.resp.status = 500 if eruby.error
   end
   
-  #Handels the event when an error in the eruby-instance occurs.
+  # Handels the event when an error in the eruby-instance occurs.
   def on_error(e)
     _hb.handle_error(e)
   end

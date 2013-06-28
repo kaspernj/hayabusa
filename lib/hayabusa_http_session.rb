@@ -136,11 +136,11 @@ class Hayabusa::Http_session < Hayabusa::Client_session
   end
   
   def self.finalize(id)
-    @hb.log_puts "Http_session finalize #{id}." if @debug
+    @hb.log_puts "Hayabusa: Http_session finalize #{id}." if @debug
   end
   
   def destruct
-    @hb.log_puts "Http_session destruct (#{@httpserver.http_sessions.length})" if @debug and @httpserver and @httpserver.http_sessions
+    @hb.log_puts "Hayabusa: Http_session destruct (#{@httpserver.http_sessions.length})" if @debug and @httpserver and @httpserver.http_sessions
     
     begin
       @socket.close if !@socket.closed?
@@ -157,7 +157,7 @@ class Hayabusa::Http_session < Hayabusa::Client_session
   end
   
   def serve
-    @hb.log_puts "Generating meta, cookie, get, post and headers." if @debug
+    @hb.log_puts "Hayabusa: Generating meta, cookie, get, post and headers." if @debug
     @meta = @handler.meta.merge(@socket_meta)
     @cookie = @handler.cookie
     @get = @handler.get
@@ -188,7 +188,7 @@ class Hayabusa::Http_session < Hayabusa::Client_session
     @browser = Knj::Web.browser(@meta)
     @ip = @hb.ip(:meta => @meta)
     
-    @hb.log_puts "Figuring out session-ID, session-object and more." if @debug
+    @hb.log_puts "Hayabusa: Figuring out session-ID, session-object and more." if @debug
     if @cookie["HayabusaSession"].to_s.length > 0
       @session_id = @cookie["HayabusaSession"]
     elsif @browser["browser"] == "bot"
@@ -217,7 +217,7 @@ class Hayabusa::Http_session < Hayabusa::Client_session
     end
     
     if @config.key?(:logging) and @config[:logging][:access_db]
-      @hb.log_puts "Doing access-logging." if @debug
+      @hb.log_puts "Hayabusa: Doing access-logging." if @debug
       @ips = [@meta["REMOTE_ADDR"]]
       @ips << @meta["HTTP_X_FORWARDED_FOR"].split(",")[0].strip if @meta["HTTP_X_FORWARDED_FOR"]
       @hb.logs_access_pending << {

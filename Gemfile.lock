@@ -1,3 +1,8 @@
+PATH
+  remote: /Users/kaspernj/Dev/Ruby/http2
+  specs:
+    http2 (0.0.17)
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -6,7 +11,6 @@ GEM
     erubis (2.7.0)
     fcgi (0.9.1)
     git (1.2.5)
-    http2 (0.0.17)
     jeweler (1.6.4)
       bundler (~> 1.0)
       git (>= 1.2.5)
@@ -29,6 +33,7 @@ GEM
       string-strtr
     polyglot (0.3.3)
     rake (10.1.0)
+    rmagick (2.13.2)
     rspec (2.13.0)
       rspec-core (~> 2.13.0)
       rspec-expectations (~> 2.13.0)
@@ -57,11 +62,12 @@ DEPENDENCIES
   datet
   erubis
   fcgi
-  http2
+  http2!
   jeweler (~> 1.6.3)
   json
   knjrbfw
   mail
+  rmagick
   rspec (>= 2.3.0)
   ruby_process
   sqlite3

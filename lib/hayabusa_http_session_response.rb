@@ -21,6 +21,7 @@ class Hayabusa::Http_session::Response
     401 => "Unauthorized",
     403 => "Forbidden",
     404 => "Not Found",
+    408 => "Request Timeout",
     500 => "Internal Server Error"
   }
   NL = "\r\n"
@@ -40,29 +41,18 @@ class Hayabusa::Http_session::Response
     @trailers = []
     @skip_statuscode = true if args[:mode] == :cgi
     @session_cookie = args[:cookie]
-    
     @headers_sent = false
     @headers_trailing = {}
-    
     @mode = args[:mode]
+    @cookies = []
     
     @headers = {
       "date" => ["Date", Time.now.httpdate]
     }
     
-    @headers_11 = {
-      "Connection" => "Keep-Alive"
-    }
     if args[:mode] != :cgi and (!args.key?(:chunked) or args[:chunked])
-      @headers_11["Transfer-Encoding"] = "chunked"
+      @chunked = true
     end
-    
-    #Socket-timeout is currently broken in JRuby.
-    if RUBY_ENGINE != "jruby"
-      @headers_11["Keep-Alive"] = "timeout=15, max=30"
-    end
-    
-    @cookies = []
   end
   
   def header(key, val)
@@ -70,11 +60,31 @@ class Hayabusa::Http_session::Response
     raise "Value contains more lines than 1 (#{lines})." if lines > 1
     
     if !@headers_sent
-      @headers[key.to_s.downcase] = [key, val]
+      @headers[key.to_s.downcase.strip] = [key, val]
     else
       raise "Headers already sent and given header was not in trailing headers: '#{key}'." if @trailers.index(key) == nil
-      @headers_trailing[key.to_s.downcase] = [key, val]
+      @headers_trailing[key.to_s.downcase.strip] = [key, val]
     end
+  end
+  
+  # Returns the value of a header.
+  def get_header_value(header)
+    header_p = header.to_s.downcase.strip
+    
+    gothrough = [@headers, @headers_trailing]
+    gothrough.each do |headers|
+      headers.each do |key, val|
+        return val[1] if header_p == key
+      end
+    end
+    
+    return nil
+  end
+  
+  # Returns true if the given header-name is sat.
+  def has_header?(header)
+    header_p = header.to_s.downcase.strip
+    return @headers.key?(header_p) || @headers_trailing.key?(header_p)
   end
   
   def cookie(cookie)
@@ -83,6 +93,15 @@ class Hayabusa::Http_session::Response
   end
   
   def header_str
+    if @http_version == "1.1" && @chunked
+      self.header("Connection", "Keep-Alive")
+      self.header("Transfer-Encoding", "chunked")
+    elsif @http_version == "1.1" && get_header_value("content-length").to_i > 0
+      self.header("Connection", "Keep-Alive")
+    end
+    
+    self.header("Keep-Alive", "timeout=15, max=30") if self.get_header_value("connection") == "Keep-Alive"
+    
     if @skip_statuscode
       res = ""
     else
@@ -102,10 +121,6 @@ class Hayabusa::Http_session::Response
     end
     
     if @http_version == "1.1"
-      @headers_11.each do |key, val|
-        res << "#{key}: #{val}#{NL}"
-      end
-      
       @trailers.each do |trailer|
         res << "Trailer: #{trailer}#{NL}"
       end
@@ -121,8 +136,17 @@ class Hayabusa::Http_session::Response
   end
   
   def write
-    @headers_sent = true
+    # Write headers to socket.
     @socket.write(self.header_str)
+    @headers_sent = true
+    @cgroup.chunked = @chunked
+    
+    # Set the content-length on the content-group to enable write-lenght-validation.
+    if self.has_header?("content-length")
+      @cgroup.content_length = self.get_header_value("content-length").to_i
+    else
+      @cgroup.content_length = nil
+    end
     
     if @status == 304
       #do nothing.
@@ -138,12 +162,19 @@ class Hayabusa::Http_session::Response
         @socket.write(NL)
       else
         @cgroup.write_to_socket
-        @socket.write("#{NL}#{NL}") if @mode != :cgi
       end
     end
     
+    # Validate that no more has been written than given in content-length, since that will corrupt the client.
+    if self.has_header?("content-length")
+      length = cgroup.length_written
+      content_length = self.get_header_value("content-length").to_i
+      raise "More written than given in content-length: #{length}, #{content_length}" if length != content_length
+    end
+    
+    # Close socket if that should be done.
     if @close and @mode != :cgi
-      @hb.log_puts("Closing socket.")
+      @hb.log_puts("Hauabusa: Closing socket.")
       @socket.close
     end
   end
