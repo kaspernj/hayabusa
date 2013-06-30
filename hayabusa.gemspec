@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "hayabusa"
-  s.version = "0.0.22"
+  s.version = "0.0.23"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
-  s.date = "2013-06-28"
+  s.date = "2013-06-30"
   s.description = "A threadded web/app-server that focuses on threadding, shared ressources, speed and more."
   s.email = "k@spernj.org"
   s.executables = ["check_running.rb", "hayabusa_benchmark.rb", "hayabusa_cgi.rb", "hayabusa_fcgi.fcgi", "hayabusa_fcgi.rb", "hayabusa_fcgi_server.rb", "hayabusa_spec_restart.rb", "knjappserver_start.rb"]
@@ -84,9 +84,11 @@ Gem::Specification.new do |s|
     "pages/debug_http_sessions.rhtml",
     "pages/debug_memory_usage.rhtml",
     "pages/error_notfound.rhtml",
+    "pages/image.png",
     "pages/logs_latest.rhtml",
     "pages/logs_show.rhtml",
     "pages/spec.rhtml",
+    "pages/spec_exit.rhtml",
     "pages/spec_multiple_threads.rhtml",
     "pages/spec_sleeper.rhtml",
     "pages/spec_test_multiple_clients.rhtml",
