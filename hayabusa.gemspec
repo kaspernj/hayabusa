@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "hayabusa"
-  s.version = "0.0.23"
+  s.version = "0.0.24"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
@@ -39,6 +39,7 @@ Gem::Specification.new do |s|
     "conf/apache2_hayabusa_conf.conf",
     "hayabusa.gemspec",
     "lib/hayabusa.rb",
+    "lib/hayabusa_cgi.rb",
     "lib/hayabusa_cgi_session.rb",
     "lib/hayabusa_cgi_tools.rb",
     "lib/hayabusa_client_session.rb",
