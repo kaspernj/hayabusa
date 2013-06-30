@@ -1,3 +1,6 @@
+require "rubygems"
+require "RMagick"
+
 Hayabusa::FCGI_CONF = {
   :hayabusa => {
     :title => "Fcgi_test",

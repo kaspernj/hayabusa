@@ -193,16 +193,10 @@ class Hayabusa::Http_session::Request
           ).return
           post_data.close(true)
           
-          self.convert_post(@post, post_treated, {:urldecode => false})
+          Hayabusa::Http_session::Request.convert_post(@post, post_treated, {:urldecode => false})
         else
-          post_data.split("&").each do |splitted|
-            splitted = splitted.split("=")
-            key = Knj::Web.urldec(splitted[0]).to_s.encode("utf-8")
-            val = splitted[1].to_s.encode("utf-8")
-            post_treated[key] = val
-          end
-          
-          self.convert_post(@post, post_treated, {:urldecode => true})
+          Hayabusa::Http_session::Request.parse_post(post_data, post_treated)
+          Hayabusa::Http_session::Request.convert_post(@post, post_treated, {:urldecode => true})
         end
       end
     ensure
@@ -216,6 +210,16 @@ class Hayabusa::Http_session::Request
       if @get["_hb_httpsession_id"]
         @hb.httpsessions_ids.delete(@get["_hb_httpsession_id"])
       end
+    end
+  end
+  
+  # Takes raw post data and puts it into a hash.
+  def self.parse_post(post_data, post_treated)
+    post_data.split("&").each do |splitted|
+      splitted = splitted.split("=")
+      key = Knj::Web.urldec(splitted[0]).to_s.encode("utf-8")
+      val = splitted[1].to_s.encode("utf-8")
+      post_treated[key] = val
     end
   end
   
@@ -233,8 +237,8 @@ class Hayabusa::Http_session::Request
     return @modified_since
   end
   
-  #Converts post-result to the right type of hash.
-  def convert_post(seton, post_val, args = {})
+  # Converts post-result to the right type of hash.
+  def self.convert_post(seton, post_val, args = {})
     post_val.each do |varname, value|
       Knj::Web.parse_name(seton, varname, value, args)
     end

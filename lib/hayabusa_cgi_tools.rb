@@ -68,10 +68,10 @@ class Hayabusa::Cgi_tools
   
   #This method is used to proxy a request to another FCGI-process, since a single FCGI-process cant handle more requests simultanious.
   def proxy_request_to(args)
-    cgi, http, fp_log = args[:cgi], args[:http], args[:fp_log]
+    @cgi, @http, fp_log = args[:cgi], args[:http], args[:fp_log]
     
     headers = {"Hayabusa_mode" => "proxy"}
-    cgi.env_table.each do |key, val|
+    @cgi.env.each do |key, val|
       keyl = key.to_s.downcase
       
       if key[0, 5] == "HTTP_"
@@ -87,66 +87,62 @@ class Hayabusa::Cgi_tools
     end
     
     #Make request.
-    uri = Knj::Web.parse_uri(cgi.env_table["REQUEST_URI"])
+    uri = Knj::Web.parse_uri(@cgi.env["REQUEST_URI"])
     url = File.basename(uri[:path])
     url = url[1, url.length] if url[0] == "/"
     
-    if cgi.env_table["QUERY_STRING"].to_s.length > 0
-      url << "?#{cgi.env_table["QUERY_STRING"]}"
-    end
-    
-    #cgi.print "Content-Type: text/html\r\n"
-    #cgi.print "\r\n"
-    
-    if args[:timeout]
-      ttime = args[:timeout]
-    else
-      ttime = 30
+    if @cgi.env["QUERY_STRING"].to_s.length > 0
+      url << "?#{cgi.env["QUERY_STRING"]}"
     end
     
     fp_log.puts("Proxying URL: '#{url}'.") if fp_log
     
     #The HTTP-connection can have closed mean while, so we have to test it.
-    raise Errno::ECONNABORTED if !http.socket_working?
+    raise Errno::ECONNABORTED unless @http.socket_working?
     
-    #require "timeout"
-    #Timeout.timeout(ttime) do
-      if cgi.request_method == "POST" and cgi.content_type.to_s.downcase.index("multipart/form-data") != nil
-        count = 0
-        http.post_multipart(
+    # Count used to know what is the status line.
+    @count = 0
+    
+    if @cgi.env["REQUEST_METHOD"] == "POST"
+      # Use CGI to parse post.
+      real_cgi = Hayabusa::Cgi.new(@cgi)
+      params = real_cgi.params
+      
+      if cgi.env["CONTENT_TYPE"].to_s.downcase.include?("multipart/form-data")
+        @http.post_multipart(
           :url => url,
-          :post => self.convert_fcgi_post_fileuploads_to_http2(self.convert_fcgi_post(cgi.params, :http2_compatible => true)),
+          :post => self.convert_fcgi_post_fileuploads_to_http2(self.convert_fcgi_post(params, :http2_compatible => true)),
           :default_headers => headers,
           :cookies => false,
-          :on_content => proc{|line|
-            cgi.print(line) if count > 0
-            count += 1
-          }
-        )
-      elsif cgi.request_method == "POST"
-        count = 0
-        http.post(
-          :url => url,
-          :post => self.convert_fcgi_post(cgi.params, :http2_compatible => true),
-          :default_headers => headers,
-          :cookies => false,
-          :on_content => proc{|line|
-            cgi.print(line) if count > 0
-            count += 1
-          }
+          :on_content => self.method(:on_content)
         )
       else
-        count = 0
-        http.get(
+        @http.post(
           :url => url,
+          :post => self.convert_fcgi_post(params, :http2_compatible => true),
           :default_headers => headers,
           :cookies => false,
-          :on_content => proc{|line|
-            cgi.print(line) if count > 0
-            count += 1
-          }
+          :on_content => self.method(:on_content)
         )
       end
-    #end
+    else
+      @http.get(
+        :url => url,
+        :default_headers => headers,
+        :cookies => false,
+        :on_content => self.method(:on_content)
+      )
+    end
+  end
+  
+  def on_content(line)
+    if @count <= 0
+      # This is needed to trick FCGI into writing out correct status codes by ignoring the original status code and outputting it as a "Status"-header instead which is defined in the response-file.
+    else
+      # Write the given line to the content.
+      @cgi.out.print(line)
+    end
+    
+    @count += 1
   end
 end

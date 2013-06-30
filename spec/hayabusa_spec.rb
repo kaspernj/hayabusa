@@ -1,92 +1,92 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
 describe "Hayabusa" do
-  it "should be able to start a sample-server" do
-    require "rubygems"
-    require "sqlite3" if RUBY_ENGINE != "jruby"
-    require "json"
-    
-    begin
-      require "#{File.realpath(File.dirname(__FILE__))}/../../knjrbfw/lib/knjrbfw.rb"
-    rescue LoadError
-      require "knjrbfw"
-    end
-    
-    require "#{File.realpath(File.dirname(__FILE__))}/../lib/hayabusa.rb"
-    
-    begin
-      require "#{File.realpath(File.dirname(__FILE__))}/../../http2/lib/http2.rb"
-    rescue LoadError
-      require "http2"
-    end
-    
-    db_path = "#{Knj::Os.tmpdir}/hayabusa_rspec.sqlite3"
-    File.unlink(db_path) if File.exists?(db_path)
-    
-    db = Knj::Db.new(
-      :type => "sqlite3",
-      :path => db_path,
-      :return_keys => "symbols"
-    )
-    
-    $appserver = Hayabusa.new(
-      :debug => false,
-      :title => "SpecTest",
-      :port => 1515,
-      :doc_root => "#{File.dirname(__FILE__)}/../pages",
-      :locales_gettext_funcs => true,
-      :locale_default => "da_DK",
-      :db => db,
-      :threadding => {
-        :priority => -3
-      }
-    )
-    
-    $appserver.config[:handlers] << {
-      :regex => /^\/Kasper$/,
-      :callback => proc{|data|
-        data[:httpsession].page_path = nil
-        
-        eruby = data[:httpsession].eruby
-        eruby.connect(:on_error) do |e|
-          _hb.handle_error(e)
-        end
-        
-        eruby.import("#{File.dirname(__FILE__)}/../pages/spec.rhtml")
-      }
+  require "rubygems"
+  require "sqlite3" if RUBY_ENGINE != "jruby"
+  require "json"
+  require "RMagick"
+  
+  begin
+    require "#{File.realpath(File.dirname(__FILE__))}/../../knjrbfw/lib/knjrbfw.rb"
+  rescue LoadError
+    require "knjrbfw"
+  end
+  
+  require "#{File.realpath(File.dirname(__FILE__))}/../lib/hayabusa.rb"
+  
+  begin
+    require "#{File.realpath(File.dirname(__FILE__))}/../../http2/lib/http2.rb"
+    puts "Loaded custom version of Http2."
+  rescue LoadError
+    require "http2"
+    puts "Loaded normal gem version of Http2."
+  end
+  
+  db_path = "#{Knj::Os.tmpdir}/hayabusa_rspec.sqlite3"
+  File.unlink(db_path) if File.exists?(db_path)
+  
+  db = Knj::Db.new(
+    :type => "sqlite3",
+    :path => db_path,
+    :return_keys => "symbols"
+  )
+  
+  $appserver = Hayabusa.new(
+    :debug => false,
+    :title => "SpecTest",
+    :port => 1515,
+    :doc_root => "#{File.dirname(__FILE__)}/../pages",
+    :locales_gettext_funcs => true,
+    :locale_default => "da_DK",
+    :db => db,
+    :threadding => {
+      :priority => -3
     }
-    
-    $appserver.vars[:test] = "kasper"
-    $appserver.define_magic_var(:_testvar1, "Kasper")
-    $appserver.define_magic_var(:_testvar2, "Johansen")
-    $appserver.start
-    
-    raise "Expected thread-pool-priority to be '-3' but it wasnt: '#{$appserver.threadpool.args[:priority]}'." if $appserver.threadpool.args[:priority] != -3
-    
-    http = Http2.new(:host => "localhost", :port => 80, :encoding_gzip => false, :debug => false) rescue nil
-    
-    $testmodes = [{
-      :name => :standalone,
-      :path_pre => "",
-      :http => Http2.new(:host => "localhost", :port => 1515, :debug => false)
+  )
+  
+  $appserver.config[:handlers] << {
+    :regex => /^\/Kasper$/,
+    :callback => proc{|data|
+      data[:httpsession].page_path = nil
+      
+      eruby = data[:httpsession].eruby
+      eruby.connect(:on_error) do |e|
+        _hb.handle_error(e)
+      end
+      
+      eruby.import("#{File.dirname(__FILE__)}/../pages/spec.rhtml")
+    }
+  }
+  
+  $appserver.vars[:test] = "kasper"
+  $appserver.define_magic_var(:_testvar1, "Kasper")
+  $appserver.define_magic_var(:_testvar2, "Johansen")
+  $appserver.start
+  
+  raise "Expected thread-pool-priority to be '-3' but it wasnt: '#{$appserver.threadpool.args[:priority]}'." if $appserver.threadpool.args[:priority] != -3
+  
+  http = Http2.new(:host => "localhost", :port => 80, :encoding_gzip => false, :debug => false) rescue nil
+  
+  $testmodes = [{
+    :name => :standalone,
+    :path_pre => "",
+    :http => Http2.new(:host => "localhost", :port => 1515, :debug => false)
+  }]
+  
+  if http
+    $testmodes += [{
+      :name => :cgi,
+      :path_pre => "hayabusa_cgi_test/",
+      :http => http
+    },{
+      :name => :fcgi,
+      :path_pre => "hayabusa_fcgi_test/",
+      :http => http
     }]
-    
-    if http
-      $testmodes += [{
-        :name => :cgi,
-        :path_pre => "hayabusa_cgi_test/",
-        :http => http
-      },{
-        :name => :fcgi,
-        :path_pre => "hayabusa_fcgi_test/",
-        :http => http
-      }]
-    end
   end
   
   it "should be able to get multiple pictures" do
     require "base64"
-    require "RMagick"
     
     # Symlink 'image.rhtml' first.
     img_from_path = "#{Knj.knjrbfw_path}/webscripts/image.rhtml"
@@ -97,13 +97,12 @@ describe "Hayabusa" do
     File.unlink(img_to_path) if File.symlink?(img_to_path)
     File.symlink(img_from_path, img_to_path)
     
+    last_tdata = nil
+    
     begin
-      http = $testmodes.first[:http]
-      res = http.get("image.rhtml?path64=#{Base64.encode64("image.png").to_s.strip}&rounded_corners=8&width=550")
-      res.contenttype.should eql("image/png")
-      res.header?("content-length").should eql(true)
-      
       $testmodes.each do |tdata|
+        last_tdata = tdata
+        
         3.times do
           path = "#{File.dirname(__FILE__)}/../pages/testpic.jpeg"
           
@@ -122,6 +121,7 @@ describe "Hayabusa" do
           #puts "Getting exit-script through #{tdata[:name]}"
           res_exit = tdata[:http].get("#{tdata[:path_pre]}spec_exit.rhtml")
           res_exit.body.should eql("ExitOutput\n")
+          res_exit.code.to_i.should eql(304)
           
           #puts "Getting normal image through #{tdata[:name]}"
           res2 = tdata[:http].get("#{tdata[:path_pre]}image.rhtml?path64=#{Base64.encode64("image.png").to_s.strip}&rounded_corners=8&width=550")
@@ -130,6 +130,11 @@ describe "Hayabusa" do
           res1.body.bytesize.should eql(res2.body.bytesize)
         end
       end
+    rescue => e
+      puts "Mode: #{last_tdata[:name]}" if last_tdata
+      STDERR.puts e.inspect
+      STDERR.puts e.backtrace
+      raise e
     ensure
       File.unlink(img_to_path) if File.exists?(img_to_path)
     end
@@ -162,9 +167,12 @@ describe "Hayabusa" do
       
       1.upto(2) do |count|
         data = Marshal.load(res.body)
+        raise "No data returned?" unless data
         
         if count != 2
-          if data["testfile#{count}"]["val"] != File.read(fpaths["fpath#{count}"])
+          key = "testfile#{count}"
+          raise "Not defined in returned data: '#{key}' in '#{data}'." unless data.key?(key)
+          if data[key]["val"] != File.read(fpaths["fpath#{count}"])
             File.open("/tmp/hayabusa_spec_testfile#{count}_1", "w") do |fp|
               fp.puts("Class: #{data["testfile#{count}"].class.name}")
               fp.write(data["testfile#{count}"])
@@ -205,7 +213,7 @@ describe "Hayabusa" do
       res = tdata[:http].post(:url => "#{tdata[:path_pre]}spec.rhtml", :post => {
         "postdata" => "Test post"
       })
-      raise "POST-request did not return expected data: '#{res.body}' for '#{tdata[:name]}'." if res.body.to_s.strip != "Test post"
+      raise "POST-request did not return expected data: '#{res.body}' for '#{tdata[:name]}' data: '#{res.body}'." if res.body.to_s.strip != "Test post"
       
       res = tdata[:http].post(:url => "#{tdata[:path_pre]}spec.rhtml?choice=dopostconvert", :post => {
         "postdata" => "Test post",

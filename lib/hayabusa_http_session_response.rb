@@ -116,6 +116,9 @@ class Hayabusa::Http_session::Response
       res << NL
     end
     
+    # The status header is used to make CGI or FCGI use the correct status-code.
+    self.header("Status", "#{@status} #{STATUS_CODES[@status]}")
+    
     @headers.each do |key, val|
       res << "#{val[0]}: #{val[1]}#{NL}"
     end

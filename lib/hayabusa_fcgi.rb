@@ -1,3 +1,5 @@
+require "cgi"
+
 #This class is used for FCGI-sessions. It normally starts a Hayabusa-host-process which this (and other) FCGI-processes will proxy requests to. The host-process will automatically kill itself when no more FCGI-sessions are connected to emulate normal FCGI behaviour.
 class Hayabusa::Fcgi
   def initialize
@@ -24,10 +26,10 @@ class Hayabusa::Fcgi
     return nil if @hayabusa or @fcgi_proxy
     
     #Parse the configuration-header and generate Hayabusa-config-hash.
-    raise "No HTTP_HAYABUSA_FCGI_CONFIG-header was given." if !@cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
-    @hayabusa_fcgi_conf_path = @cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
+    raise "No HTTP_HAYABUSA_FCGI_CONFIG-header was given." if !@cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"]
+    @hayabusa_fcgi_conf_path = @cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"]
     require @hayabusa_fcgi_conf_path
-    raise "No 'Hayabusa::FCGI_CONF'-constant was spawned by '#{@cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if !Hayabusa.const_defined?(:FCGI_CONF)
+    raise "No 'Hayabusa::FCGI_CONF'-constant was spawned by '#{@cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if !Hayabusa.const_defined?(:FCGI_CONF)
     conf = Hayabusa::FCGI_CONF
     
     hayabusa_conf = Hayabusa::FCGI_CONF[:hayabusa]
@@ -132,11 +134,8 @@ class Hayabusa::Fcgi
     $stderr.puts "[hayabusa] Starting FCGI." if @debug
     
     begin
-      FCGI.each_cgi do |cgi|
+      FCGI.each do |cgi|
         begin
-          #cgi.print "Content-Type: text/html\r\n"
-          #cgi.print "\r\n"
-          
           #Set 'cgi'-variable for CGI-tools.
           @cgi_tools.cgi = cgi
           @cgi = cgi
@@ -149,23 +148,20 @@ class Hayabusa::Fcgi
           end
           
           #Ensure the same FCGI-process isnt active for more than one website.
-          raise "Expected 'HTTP_HAYABUSA_FCGI_CONFIG' to be '#{@hayabusa_fcgi_conf_path}' but it wasnt: '#{cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if @hayabusa_fcgi_conf_path and @hayabusa_fcgi_conf_path != cgi.env_table["HTTP_HAYABUSA_FCGI_CONFIG"]
+          raise "Expected 'HTTP_HAYABUSA_FCGI_CONFIG' to be '#{@hayabusa_fcgi_conf_path}' but it wasnt: '#{cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if @hayabusa_fcgi_conf_path and @hayabusa_fcgi_conf_path != cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"]
           
-          if @fcgi_proxy
-            #Proxy request to the host-FCGI-process.
-            $stderr.puts "[hayabusa] Proxying request." if @debug
-            @cgi_tools.proxy_request_to(:cgi => cgi, :http => @fcgi_proxy[:http], :fp_log => @fcgi_proxy[:fp_log])
-          else
-            self.handle_fcgi_request(:cgi => cgi)
-          end
+          #Proxy request to the host-FCGI-process.
+          raise "No proxy spawned." unless @fcgi_proxy
+          $stderr.puts "[hayabusa] Proxying request." if @debug
+          @cgi_tools.proxy_request_to(:cgi => cgi, :http => @fcgi_proxy[:http], :fp_log => @fcgi_proxy[:fp_log])
         rescue Errno::ECONNABORTED, Errno::ECONNREFUSED, Errno::ECONNRESET => e
           $stderr.puts "[hayabusa] Connection to server was interrupted - trying again: <#{e.class.name}> #{e.message}"
           @fcgi_proxy = nil #Force re-evaluate if this process should be host or proxy.
           retry
         rescue Exception => e
-          cgi.print "Content-Type: text/html\r\n"
-          cgi.print "\r\n"
-          cgi.print Knj::Errors.error_str(e, :html => true)
+          @cgi.out.print "Content-Type: text/html\r\n"
+          @cgi.out.print "\r\n"
+          @cgi.out.print Knj::Errors.error_str(e, :html => true)
           
           if @hayabusa
             @hayabusa.log_puts e.inspect
@@ -175,6 +171,7 @@ class Hayabusa::Fcgi
             STDERR.puts e.backtrace
           end
         ensure
+          @cgi.finish
           @cgi = nil
           @cgi_tools.cgi = nil
         end
@@ -183,46 +180,5 @@ class Hayabusa::Fcgi
       $stderr.puts "[hayabusa] FCGI-loop stopped."
       @hayabusa.stop if @hayabusa
     end
-  end
-  
-  #Handles the request as a real request on a Hayabusa-host running inside the current process. This is not used any more but kept if we need support for it once again (maybe the developer should be able to decide this in some kind of config?).
-  def handle_fcgi_request(args)
-    #Host the FCGI-process.
-    $stderr.puts "[hayabusa] Running request as CGI." if @debug
-    
-    #Enforce $stdout variable.
-    $stdout = @hayabusa.cio
-    
-    #The rest is copied from the FCGI-part.
-    headers = {}
-    @cgi.env_table.each do |key, val|
-      if key[0, 5] == "HTTP_" and key != "HTTP_HAYABUSA_FCGI_CONFIG"
-        key = key[5, key.length].gsub("_", " ").gsub(" ", "-")
-        headers[key] = val
-      end
-    end
-    
-    meta = @cgi.env_table.to_hash
-    
-    uri = Knj::Web.parse_uri(meta["REQUEST_URI"])
-    meta["PATH_TRANSLATED"] = File.basename(uri[:path])
-    
-    cgi_data = {
-      :cgi => @cgi,
-      :headers => headers,
-      :get => Knj::Web.parse_urlquery(@cgi.env_table["QUERY_STRING"], :urldecode => true, :force_utf8 => true),
-      :meta => meta
-    }
-    if @cgi.request_method == "POST"
-      cgi_data[:post] = @cgi_tools.convert_fcgi_post(@cgi.params)
-    else
-      cgi_data[:post] = {}
-    end
-    
-    @hayabusa.config[:cgi] = cgi_data
-    
-    
-    #Handle request.
-    @hayabusa.start_cgi_request
   end
 end
