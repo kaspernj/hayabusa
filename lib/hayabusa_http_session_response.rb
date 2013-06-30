@@ -148,21 +148,17 @@ class Hayabusa::Http_session::Response
       @cgroup.content_length = nil
     end
     
-    if @status == 304
-      #do nothing.
-    else
-      if @chunked
-        @cgroup.write_to_socket
-        @socket.write("0#{NL}")
-        
-        @headers_trailing.each do |header_id_str, header|
-          @socket.write("#{header[0]}: #{header[1]}#{NL}")
-        end
-        
-        @socket.write(NL)
-      else
-        @cgroup.write_to_socket
+    if @chunked
+      @cgroup.write_to_socket
+      @socket.write("0#{NL}")
+      
+      @headers_trailing.each do |header_id_str, header|
+        @socket.write("#{header[0]}: #{header[1]}#{NL}")
       end
+      
+      @socket.write(NL)
+    else
+      @cgroup.write_to_socket
     end
     
     # Validate that no more has been written than given in content-length, since that will corrupt the client.

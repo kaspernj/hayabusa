@@ -98,8 +98,13 @@ describe "Hayabusa" do
     File.symlink(img_from_path, img_to_path)
     
     begin
+      http = $testmodes.first[:http]
+      res = http.get("image.rhtml?path64=#{Base64.encode64("image.png").to_s.strip}&rounded_corners=8&width=550")
+      res.contenttype.should eql("image/png")
+      res.header?("content-length").should eql(true)
+      
       $testmodes.each do |tdata|
-        5.times do
+        3.times do
           path = "#{File.dirname(__FILE__)}/../pages/testpic.jpeg"
           
           res = tdata[:http].get("#{tdata[:path_pre]}testpic.jpeg")
@@ -107,7 +112,22 @@ describe "Hayabusa" do
           
           res.body.bytes.to_a.should eql(File.read(path).bytes.to_a)
           
+          #puts "Getting forced image through #{tdata[:name]}"
           res = tdata[:http].get("#{tdata[:path_pre]}image.rhtml?force=true&path64=#{Base64.encode64("testpic.jpeg").to_s.strip}")
+          
+          #puts "Getting normal image through #{tdata[:name]}"
+          res1 = tdata[:http].get("#{tdata[:path_pre]}image.rhtml?path64=#{Base64.encode64("image.png").to_s.strip}&rounded_corners=8&width=550")
+          res1.contenttype.should eql("image/png")
+          
+          #puts "Getting exit-script through #{tdata[:name]}"
+          res_exit = tdata[:http].get("#{tdata[:path_pre]}spec_exit.rhtml")
+          res_exit.body.should eql("ExitOutput\n")
+          
+          #puts "Getting normal image through #{tdata[:name]}"
+          res2 = tdata[:http].get("#{tdata[:path_pre]}image.rhtml?path64=#{Base64.encode64("image.png").to_s.strip}&rounded_corners=8&width=550")
+          res2.contenttype.should eql("image/png")
+          
+          res1.body.bytesize.should eql(res2.body.bytesize)
         end
       end
     ensure
