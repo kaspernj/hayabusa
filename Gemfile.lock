@@ -6,13 +6,13 @@ GEM
     erubis (2.7.0)
     fcgi (0.9.1)
     git (1.2.5)
-    http2 (0.0.21)
+    http2 (0.0.22)
     jeweler (1.6.4)
       bundler (~> 1.0)
       git (>= 1.2.5)
       rake
     json (1.8.0)
-    knjrbfw (0.0.105)
+    knjrbfw (0.0.107)
       datet
       http2
       php4r
