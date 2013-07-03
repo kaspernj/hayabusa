@@ -37,7 +37,6 @@ require opts[:conf_path]
 #Gemerate Hayabusa-config-hash.
 hayabusa_conf = Hayabusa::FCGI_CONF[:hayabusa]
 hayabusa_conf.merge!(
-  :debug => false,
   :debug_log => true,
   :debug_print => false,
   :debug_print_err => false,

@@ -21,4 +21,5 @@ group :development do
   gem "jeweler", "~> 1.6.3"
   gem "rmagick"
   gem "sqlite3" if RUBY_ENGINE != "jruby"
+  gem "php4r"
 end

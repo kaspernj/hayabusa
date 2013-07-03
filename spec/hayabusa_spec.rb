@@ -376,7 +376,7 @@ describe "Hayabusa" do
             
             begin
               data = JSON.parse(res.body)
-            rescue JSON::GeneratorError
+            rescue
               raise "Could not parse JSON from result: '#{res.body}'."
             end
             

@@ -42,6 +42,10 @@ def _requestdata
   return Thread.current[:hayabusa] if Thread.current[:hayabusa]
 end
 
+def _request_hash
+  return Thread.current[:hayabusa][:httpsession].request_hash if Thread.current[:hayabusa]
+end
+
 def _hb
   return Thread.current[:hayabusa][:hb] if Thread.current[:hayabusa]
 end

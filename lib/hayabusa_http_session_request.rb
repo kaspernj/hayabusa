@@ -1,4 +1,5 @@
 require "tempfile"
+require "uri"
 
 #If we are running on JRuby or Rubinius this will seriously speed things up if we are behind a proxy.
 if RUBY_PLATFORM == "java" or RUBY_ENGINE == "rbx"
@@ -70,9 +71,14 @@ class Hayabusa::Http_session::Request
     uri_raw = match[2]
     uri_raw = "index.rhtml" if uri_raw == ""
     
-    uri = Knj::Web.parse_uri(match[2]) rescue {:path => match[2], :query => ""}
+    if uri = URI.parse(match[2]) rescue nil
+      uri = {:path => uri.path.slice(1, 999), :query => uri.query}
+    else
+      uri = {:path => match[2], :query => ""}
+    end
     
     page_filepath = Knj::Web.urldec(uri[:path])
+    
     if page_filepath.empty? or page_filepath == "/" or File.directory?("#{@hb.config[:doc_root]}/#{page_filepath}")
       page_filepath = "#{page_filepath}/#{@hb.config[:default_page]}"
     end

@@ -172,4 +172,9 @@ class Hayabusa
       raise "Could not figure out IP from meta-data."
     end
   end
+  
+  # Returns the currelt URL.
+  def current_url
+    return Knj::Web.url
+  end
 end

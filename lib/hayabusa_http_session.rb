@@ -179,6 +179,8 @@ class Hayabusa::Http_session < Hayabusa::Client_session
     end
     
     @page_path = @handler.page_path
+    @hb.log_puts "Hayabusa: Page path: #{@page_path}" if @debug
+    
     @ext = File.extname(@page_path).downcase[1..-1].to_s
     
     @ctype = @types[@ext.to_sym] if @ext.length > 0 and @types.key?(@ext.to_sym)

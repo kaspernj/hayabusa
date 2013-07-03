@@ -63,6 +63,7 @@ DEPENDENCIES
   json
   knjrbfw
   mail
+  php4r
   rmagick
   rspec (>= 2.3.0)
   ruby_process
