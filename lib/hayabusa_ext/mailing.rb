@@ -7,8 +7,8 @@ class Hayabusa
     require "knj/autoload/ping"
     
     @mails_waiting = []
-    @mails_mutex = Monitor.new
-    @mails_queue_mutex = Monitor.new
+    @mails_mutex = ::Monitor.new
+    @mails_queue_mutex = ::Monitor.new
     @mails_timeout = self.timeout(:time => @config[:mailing_time], &self.method(:mail_flush))
   end
   
@@ -60,7 +60,8 @@ class Hayabusa
       
       #Use subprocessing to avoid the mail-framework (activesupport and so on, also possible memory leaks in those large frameworks).
       self.log_puts("Starting subprocess for mailing.") if @debug
-      Ruby_process::Cproxy.run do |data|
+      require "ruby_process"
+      ::Ruby_process::Cproxy.run do |data|
         subproc = data[:subproc]
         subproc.static(:Object, :require, "rubygems")
         subproc.static(:Object, :require, "mail")
@@ -78,7 +79,7 @@ class Hayabusa
             #ignore - 
           rescue => e
             @mails_waiting.delete(mail)
-            self.handle_error(e, {:email => false})
+            self.handle_error(e, :email => false)
           end
           
           sleep 1 #sleep so we dont take up too much bandwidth.
@@ -122,13 +123,13 @@ class Hayabusa
       if args[:proc]
         mail = args[:proc].new("Knj::Mailobj", @args[:hb].config[:smtp_args])
       else
-        mail = Knj::Mailobj.new(@args[:hb].config[:smtp_args])
+        mail = ::Knj::Mailobj.new(@args[:hb].config[:smtp_args])
       end
       
       mail.to = @args[:to]
       mail.subject = @args[:subject] if @args[:subject]
-      mail.html = Knj::Strings.email_str_safe(@args[:html]) if @args[:html]
-      mail.text = Knj::Strings.email_str_safe(@args[:text]) if @args[:text]
+      mail.html = ::Knj::Strings.email_str_safe(@args[:html]) if @args[:html]
+      mail.text = ::Knj::Strings.email_str_safe(@args[:text]) if @args[:text]
       mail.from = @args[:from]
       mail.send
       
