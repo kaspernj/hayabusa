@@ -68,7 +68,7 @@ class Hayabusa::Cgi_tools
   
   #This method is used to proxy a request to another FCGI-process, since a single FCGI-process cant handle more requests simultanious.
   def proxy_request_to(args)
-    @cgi, @http, fp_log = args[:cgi], args[:http], args[:fp_log]
+    @cgi, @http, @fp_log = args[:cgi], args[:http], args[:fp_log]
     
     headers = {"Hayabusa_mode" => "proxy"}
     @cgi.env.each do |key, val|
@@ -95,7 +95,7 @@ class Hayabusa::Cgi_tools
       url << "?#{cgi.env["QUERY_STRING"]}"
     end
     
-    fp_log.puts("Proxying URL: '#{url}'.") if fp_log
+    @fp_log.puts("Proxying URL: '#{url}'.") if @fp_log
     
     #The HTTP-connection can have closed mean while, so we have to test it.
     raise Errno::ECONNABORTED unless @http.socket_working?
@@ -136,6 +136,8 @@ class Hayabusa::Cgi_tools
   end
   
   def on_content(line)
+    # STDERR.puts "Line: '#{line}'."
+    
     if @count <= 0
       # This is needed to trick FCGI into writing out correct status codes by ignoring the original status code and outputting it as a "Status"-header instead which is defined in the response-file.
     else

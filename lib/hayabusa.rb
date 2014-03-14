@@ -494,14 +494,14 @@ class Hayabusa
       @httpserv.thread_accept.join
       @httpserv.thread_restart.join if @httpserv and @httpserv.thread_restart
     rescue Interrupt => e
-      self.log_puts("Trying to stop because of interrupt - please wait while various data is beging flushed.")
+      self.log_puts "Trying to stop because of interrupt - please wait while various data is beging flushed." if @debug
       self.stop
     end
     
     if @should_restart
       loop do
         if @should_restart_done
-          self.log_puts "Ending join because the restart is done."
+          self.log_puts "Ending join because the restart is done." if @debug
           break
         end
         
@@ -537,10 +537,14 @@ class Hayabusa
   def translations
     if !@translations
       #Start the Knj::Gettext_threadded- and Knj::Translations modules for translations.
-      self.log_puts "Loading Gettext and translations." if @debug
+      self.log_puts "Spawning Knj::Translations-object." if @debug
       @translations = Knj::Translations.new(:db => @db)
+      
+      self.log_puts "Requires the translation-model." if @debug
       @ob.requireclass(:Translation, :require => false, :class => Knj::Translations::Translation)
     end
+    
+    self.log_puts "Returning the translations-object." if @debug
     
     return @translations
   end
