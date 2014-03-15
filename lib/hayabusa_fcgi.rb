@@ -13,6 +13,17 @@ class Hayabusa::Fcgi
     @debug = false
   end
   
+  def conf_path
+    #Parse the configuration-header and generate Hayabusa-config-hash.
+    if @cgi.env["HAYABUSA_FCGI_CONFIG"].to_s.length > 0
+      return @cgi.env["HAYABUSA_FCGI_CONFIG"]
+    elsif @cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"].to_s.length > 0
+      return @cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"]
+    else
+      raise "No HTTP_HAYABUSA_FCGI_CONFIG-header was given or HAYABUSA_FCGI_CONFIG environment variable."
+    end
+  end
+  
   #Evaluates if a new host-process should be started or we should proxy calls to an existing one.
   def evaluate_mode
     #If this is a FCGI-proxy-instance then the HTTP-connection should be checked if it is working.
@@ -25,9 +36,7 @@ class Hayabusa::Fcgi
     #Skip the actual check if Hayabusa is spawned or this is a working FCGI-proxy-instance.
     return nil if @hayabusa or @fcgi_proxy
     
-    #Parse the configuration-header and generate Hayabusa-config-hash.
-    raise "No HTTP_HAYABUSA_FCGI_CONFIG-header was given." if !@cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"]
-    @hayabusa_fcgi_conf_path = @cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"]
+    @hayabusa_fcgi_conf_path = conf_path
     require @hayabusa_fcgi_conf_path
     raise "No 'Hayabusa::FCGI_CONF'-constant was spawned by '#{@cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if !Hayabusa.const_defined?(:FCGI_CONF)
     conf = Hayabusa::FCGI_CONF
@@ -148,7 +157,7 @@ class Hayabusa::Fcgi
           end
           
           #Ensure the same FCGI-process isnt active for more than one website.
-          raise "Expected 'HTTP_HAYABUSA_FCGI_CONFIG' to be '#{@hayabusa_fcgi_conf_path}' but it wasnt: '#{cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"]}'." if @hayabusa_fcgi_conf_path and @hayabusa_fcgi_conf_path != cgi.env["HTTP_HAYABUSA_FCGI_CONFIG"]
+          raise "Expected 'HTTP_HAYABUSA_FCGI_CONFIG' to be '#{@hayabusa_fcgi_conf_path}' but it wasnt: '#{conf_path}' #{@cgi.env}" if @hayabusa_fcgi_conf_path != conf_path
           
           #Proxy request to the host-FCGI-process.
           raise "No proxy spawned." unless @fcgi_proxy
