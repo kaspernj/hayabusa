@@ -79,8 +79,14 @@ class Hayabusa::Http_session::Contentgroup
   end
   
   def write(cont)
+    return if cont.empty?
+    
     @mutex.synchronize do
-      @cur_data[:str] << cont
+      unless @cur_data[:str].is_a?(String)
+        raise "Couldnt add to string with a length of #{cont.length} to str, because str was a #{@cur_data[:str].class.name}. Cont: #{cont}"
+      else
+        @cur_data[:str] << cont
+      end
     end
   end
   
