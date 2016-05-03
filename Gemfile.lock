@@ -99,6 +99,7 @@ DEPENDENCIES
   ruby_process
   sqlite3
   tpool
+  wref (= 0.0.6)
 
 BUNDLED WITH
    1.11.2
