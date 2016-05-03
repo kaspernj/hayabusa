@@ -30,7 +30,7 @@ GEM
       rdoc
     json (1.8.0)
     jwt (1.2.0)
-    knjrbfw (0.0.107)
+    knjrbfw (0.0.110)
       datet
       http2
       php4r
@@ -91,7 +91,7 @@ DEPENDENCIES
   http2
   jeweler (~> 1.8.8)
   json
-  knjrbfw
+  knjrbfw (= 0.0.110)
   mail
   php4r
   rmagick
@@ -99,3 +99,6 @@ DEPENDENCIES
   ruby_process
   sqlite3
   tpool
+
+BUNDLED WITH
+   1.11.2
