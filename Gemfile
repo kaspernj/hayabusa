@@ -18,7 +18,7 @@ group :development do
   gem "json"
   gem "rspec", ">= 2.3.0"
   gem "bundler", ">= 1.0.0"
-  gem "jeweler", "~> 1.8.8"
+  gem "jeweler", "~> 2.3.9"
   gem "rmagick"
   gem "sqlite3" if RUBY_ENGINE != "jruby"
   gem "php4r"
