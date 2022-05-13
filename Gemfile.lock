@@ -60,7 +60,7 @@ GEM
     rake (10.4.2)
     rdoc (4.1.2)
       json (~> 1.4)
-    rmagick (2.13.2)
+    rmagick (4.2.5)
     rspec (2.13.0)
       rspec-core (~> 2.13.0)
       rspec-expectations (~> 2.13.0)
