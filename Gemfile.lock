@@ -79,7 +79,7 @@ GEM
       polyglot
       polyglot (>= 0.3.1)
     tsafe (0.0.11)
-    wref (0.0.6)
+    wref (0.0.8)
 
 PLATFORMS
   ruby
@@ -99,7 +99,7 @@ DEPENDENCIES
   ruby_process
   sqlite3
   tpool
-  wref (= 0.0.6)
+  wref (= 0.0.8)
 
 BUNDLED WITH
    1.11.2
