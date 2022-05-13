@@ -3,8 +3,9 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 
-gem "knjrbfw", "0.0.110"
-gem "wref", "0.0.6"
+gem "baza"
+gem "knjrbfw", ">= 0.0.113"
+gem "wref", ">= 0.0.6"
 gem "erubis"
 gem "mail"
 gem "datet"
