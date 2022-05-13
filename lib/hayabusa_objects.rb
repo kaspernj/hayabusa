@@ -380,9 +380,9 @@ class Hayabusa::Objects
   end
 
   #Same as normal get but returns false if not found instead of raising error.
-  def get!(*args, &block)
+  def get!(...)
     begin
-      return self.get(*args, &block)
+      return self.get(...)
     rescue Errno::ENOENT
       return false
     end

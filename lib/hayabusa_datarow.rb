@@ -684,9 +684,9 @@ class Hayabusa::Datarow
   #  user.each do |key, val|
   #    print "#{key}: #{val}\n" #=> username: John Doe
   #  end
-  def each(*args, &block)
+  def each(...)
     self.reload if @should_reload
-    return @data.each(*args, &block)
+    return @data.each(...)
   end
 
   #Hash-compatible.
