@@ -6,7 +6,7 @@ It uses ERubis to parse .rhtml files and caches the bytecode for Ruby-files.
 
 
 ## Contributing to hayabusa
- 
+
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
 * Fork the project
@@ -40,7 +40,7 @@ require "sqlite3"
 appsrv = Hayabusa.new(
   port: 10080,
   doc_root: "#{File.dirname(__FILE__)}/doc_root",
-  db: Knj::Db.new(
+  db: Baza::Db.new(
     type: "sqlite3",
     path: "#{File.dirname(__FILE__)}/test.sqlite3"
   )
@@ -114,12 +114,12 @@ You can also test if the headers are sent for your HTTP-session or not like this
     sleep 4
     print "Test 1<br />"
   end
-  
+
   _hb.threadded_content do
     sleep 1
     print "Test 2<br />"
   end
-  
+
   _hb.threadded_content do
     sleep 3
     print "Test 3<br />"
