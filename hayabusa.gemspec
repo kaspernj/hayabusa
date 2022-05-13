@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = "hayabusa"
-  s.version = "0.0.29"
+  s.version = "0.0.30"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib"]
@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
     "LICENSE.txt",
     "README.md"
   ]
-  s.files = Dir["{include,lib}/**/*"] + ["Rakefile"]
+  s.files = Dir["{include,lib,pages}/**/*"] + ["Rakefile"]
   s.homepage = "http://github.com/kaspernj/hayabusa"
   s.licenses = ["MIT"]
   s.rubygems_version = "2.2.2"

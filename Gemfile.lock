@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    hayabusa (0.0.29)
+    hayabusa (0.0.30)
       baza (>= 0.0.38)
       datet
       erubis
