@@ -1,0 +1,161 @@
+inherit_from: .rubocop_todo.yml
+
+AllCops:
+  DisplayCopNames: true
+  DisplayStyleGuide: true
+  NewCops: enable
+  TargetRubyVersion: 2.6
+
+require:
+  - rubocop-performance
+  - rubocop-rake
+  - rubocop-rspec
+
+# Layout/AccessModifierIndentation:
+#   EnforcedStyle: outdent
+
+Layout/CaseIndentation:
+  EnforcedStyle: end
+
+Layout/EmptyLines:
+  Enabled: false
+
+Layout/EmptyLinesAroundArguments:
+  Enabled: false
+
+Layout/EmptyLinesAroundAttributeAccessor:
+  Enabled: true
+
+Layout/EndAlignment:
+  EnforcedStyleAlignWith: variable
+
+# Layout/LineLength:
+#   Max: 160
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Layout/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+Layout/ParameterAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+Layout/SpaceAroundMethodCallOperator:
+  Enabled: true
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space
+
+Lint/DeprecatedOpenSSLConstant:
+  Enabled: true
+
+Lint/RaiseException:
+  Enabled: true
+
+Lint/StructNewOverride:
+  Enabled: true
+
+Lint/SuppressedException: # Disabled because it crashes when scanning lib/http2/post_multipart_request.rb
+  Enabled: false
+
+# Metrics/AbcSize:
+#   Max: 25
+
+Metrics/BlockLength:
+  Enabled: false
+
+# Metrics/ClassLength:
+#   Max: 250
+
+# Metrics/CyclomaticComplexity:
+#   Max: 10
+
+# Metrics/MethodLength:
+#   Max: 50
+
+# Metrics/PerceivedComplexity:
+#   Max: 10
+
+RSpec/DescribedClass:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Enabled: false
+
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/MessageSpies:
+  EnforcedStyle: receive
+
+RSpec/StubbedMock:
+  Enabled: false
+
+Style/CaseLikeIf:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  EnforcedStyle: compact
+
+Style/ConditionalAssignment:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/ExplicitBlockArgument:
+  Enabled: false
+
+Style/ExponentialNotation:
+  Enabled: true
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+# Will report offences for many places that are much more readable without using a guard clause
+Style/GuardClause:
+  Enabled: false
+
+Style/HashEachMethods:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
+
+Style/KeywordParametersOrder:
+  Enabled: false
+
+Style/LambdaCall:
+  Enabled: false
+
+Style/MultipleComparison:
+  Enabled: false
+
+Style/RegexpLiteral:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+
+Style/NilComparison:
+  Enabled: false
+
+Style/SignalException:
+  EnforcedStyle: only_raise
+
+Style/SlicingWithRange:
+  Enabled: true
+
+Style/SymbolArray:
+  Enabled: false
+
+Style/TrivialAccessors:
+  ExactNameMatch: true
+  Enabled: true

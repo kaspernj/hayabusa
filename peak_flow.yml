@@ -27,4 +27,4 @@ builds:
   build_5:
     name: Linters
     script:
-      - bundle exec rake best_practice_project:run
+      - bundle exec rubocop
