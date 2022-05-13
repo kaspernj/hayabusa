@@ -116,7 +116,7 @@ describe "Hayabusa" do
 
           #puts "Getting normal image through #{tdata[:name]}"
           res1 = tdata[:http].get("#{tdata[:path_pre]}image.rhtml?path64=#{Base64.encode64("image.png").to_s.strip}&rounded_corners=8&width=550")
-          res1.contenttype.should eql("image/png")
+          res1.content_type.should eql("image/png")
 
           #puts "Getting exit-script through #{tdata[:name]}"
           res_exit = tdata[:http].get("#{tdata[:path_pre]}spec_exit.rhtml")
@@ -125,7 +125,7 @@ describe "Hayabusa" do
 
           #puts "Getting normal image through #{tdata[:name]}"
           res2 = tdata[:http].get("#{tdata[:path_pre]}image.rhtml?path64=#{Base64.encode64("image.png").to_s.strip}&rounded_corners=8&width=550")
-          res2.contenttype.should eql("image/png")
+          res2.content_type.should eql("image/png")
 
           res1.body.bytesize.should eql(res2.body.bytesize)
         end
@@ -334,7 +334,7 @@ describe "Hayabusa" do
       }
     })
 
-    ob = Knj::Objects.new(
+    ob = Hayabusa::Objects.new(
       :db => $appserver.db,
       :datarow => true,
       :require => false,

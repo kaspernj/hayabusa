@@ -11,20 +11,6 @@ rescue Bundler::BundlerError => e
 end
 require 'rake'
 
-require 'jeweler'
-Jeweler::Tasks.new do |gem|
-  # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
-  gem.name = "hayabusa"
-  gem.homepage = "http://github.com/kaspernj/hayabusa"
-  gem.license = "MIT"
-  gem.summary = %Q{A threadded web/app-server that supports stand-alone, CGI and FCGI-modes.}
-  gem.description = %Q{A threadded web/app-server that focuses on threadding, shared ressources, speed and more.}
-  gem.email = "k@spernj.org"
-  gem.authors = ["Kasper Johansen"]
-  # dependencies defined in Gemfile
-end
-Jeweler::RubygemsDotOrgTasks.new
-
 require 'rspec/core'
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec) do |spec|
