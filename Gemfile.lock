@@ -6,7 +6,7 @@ PATH
       datet
       erubis
       http2
-      knjrbfw (>= 0.0.110)
+      knjrbfw (>= 0.0.114)
       mail
       ruby_process
       tpool
