@@ -264,12 +264,7 @@ class Hayabusa::Objects
 
   #Loads a Datarow-class by calling various static methods.
   def load_class(classname, args = {})
-    if args[:class]
-      classob = args[:class]
-    else
-      classob = @args[:module].const_get(classname)
-    end
-
+    classob = args[:class] || @args[:module].const_get(classname)
     pass_arg = Knj::Hash_methods.new(:ob => self, :db => @args[:db])
     classob.load_columns(pass_arg) if classob.respond_to?(:load_columns)
     classob.datarow_init(pass_arg) if classob.respond_to?(:datarow_init)
@@ -956,18 +951,8 @@ class Hayabusa::Objects
   #This method helps build SQL from Objects-instances list-method. It should not be called directly but only through Objects.list.
   def sqlhelper(list_args, args_def)
     args = args_def
-
-    if args[:db]
-      db = args[:db]
-    else
-      db = @args[:db]
-    end
-
-    if args[:table]
-      table_def = "`#{db.escape_table(args[:table])}`."
-    else
-      table_def = ""
-    end
+    db = args[:db] || @args[:db]
+    table_def = "`#{db.escape_table(args[:table])}`." || ""
 
     sql_joins = ""
     sql_where = ""
@@ -1360,12 +1345,7 @@ class Hayabusa::Objects
           sql_joins << " LEFT JOIN `#{const.table}` AS `#{const.classname}` ON 1=1"
         end
 
-        if table_data[:ob]
-          ob = table_data[:ob]
-        else
-          ob = self
-        end
-
+        ob = table_data[:ob] || self
         class_name = args[:table].to_sym
 
         if table_data[:datarow]
