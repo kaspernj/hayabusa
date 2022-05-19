@@ -190,12 +190,7 @@ class Hayabusa
     elsif @config[:db_args]
       @db = Baza::Db.new(@config[:db_args])
     else
-      if @config[:title]
-        db_title = @config[:title]
-      else
-        db_title = Time.now.to_f.to_s.hash
-      end
-
+      db_title = @config[:title] || Time.now.to_f.to_s.hash
       db_path = "#{Knj::Os.tmpdir}/hayabusa_fallback_db_#{db_title}.sqlite3"
       @config[:dbrev] = true
 
