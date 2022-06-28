@@ -15,7 +15,6 @@ Gem::Specification.new do |s|
   s.files = Dir["{include,lib,pages}/**/*"] + ["Rakefile"]
   s.homepage = "http://github.com/kaspernj/hayabusa"
   s.licenses = ["MIT"]
-  s.rubygems_version = "2.2.2"
   s.summary = "A threadded web/app-server that supports stand-alone, CGI and FCGI-modes."
 
   s.add_runtime_dependency("baza", ">= 0.0.38")
