@@ -38,6 +38,9 @@ Layout/MultilineMethodCallIndentation:
 Layout/MultilineOperationIndentation:
   EnforcedStyle: indented
 
+Lint/NonAtomicFileOperation:
+  Enabled: false
+
 Layout/ParameterAlignment:
   EnforcedStyle: with_fixed_indentation
 
