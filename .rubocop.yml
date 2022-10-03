@@ -92,6 +92,9 @@ RSpec/MultipleExpectations:
 RSpec/MessageSpies:
   EnforcedStyle: receive
 
+RSpec/NoExpectationExample:
+  Enabled: false
+
 RSpec/StubbedMock:
   Enabled: false
 
