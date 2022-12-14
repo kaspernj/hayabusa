@@ -338,7 +338,7 @@ describe "Hayabusa" do
       :db => $appserver.db,
       :datarow => true,
       :require => false,
-      :module => ::TestModels
+      :module => TestModels
     )
 
     person = ob.add(:Person, :name => "Kasper")
