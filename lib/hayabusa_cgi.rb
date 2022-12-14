@@ -11,7 +11,7 @@ class CGI
 end
 
 # A hack to use CGI in FCGI mode (copied from the original FCGI framework).
-class Hayabusa::Cgi < ::CGI
+class Hayabusa::Cgi < CGI
   def initialize(request, *args)
     ::CGI.remove_params
     @request = request
