@@ -1,7 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
 describe "Hayabusa" do
-  xit "should handle sessions correctly under stressed conditions" do
+  it "handles sessions correctly under stressed conditions", skip: "This spec required a web server to be running" do
     require "knjrbfw"
     Knj.gem_require(:Http2)
     require "json"
@@ -74,7 +74,7 @@ describe "Hayabusa" do
     end
   end
 
-  xit "two simultanious request should be handeled by the same process - one should proxy the request" do
+  it "two simultanious request should be handeled by the same process - one should proxy the request", skip: "This spec required a web server to be running" do
     Knj.gem_require(:Http2, "http2")
     require "json"
 

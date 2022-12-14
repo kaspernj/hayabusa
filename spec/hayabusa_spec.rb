@@ -107,27 +107,27 @@ describe "Hayabusa" do
           path = "#{File.dirname(__FILE__)}/../pages/testpic.jpeg"
 
           res = tdata[:http].get("#{tdata[:path_pre]}testpic.jpeg")
-          res.body.bytesize.should eql(File.size(path))
+          expect(res.body.bytesize).to eq File.size(path)
 
-          res.body.bytes.to_a.should eql(File.read(path).bytes.to_a)
+          expect(res.body.bytes.to_a).to eq File.read(path).bytes.to_a
 
           #puts "Getting forced image through #{tdata[:name]}"
           res = tdata[:http].get("#{tdata[:path_pre]}image.rhtml?force=true&path64=#{Base64.encode64("testpic.jpeg").to_s.strip}")
 
           #puts "Getting normal image through #{tdata[:name]}"
           res1 = tdata[:http].get("#{tdata[:path_pre]}image.rhtml?path64=#{Base64.encode64("image.png").to_s.strip}&rounded_corners=8&width=550")
-          res1.content_type.should eql("image/png")
+          expect(res1.content_type).to eq "image/png"
 
           #puts "Getting exit-script through #{tdata[:name]}"
           res_exit = tdata[:http].get("#{tdata[:path_pre]}spec_exit.rhtml")
-          res_exit.body.should eql("ExitOutput\n")
-          res_exit.code.to_i.should eql(304)
+          expect(res_exit.body).to eq "ExitOutput\n"
+          expect(res_exit.code.to_i).to eq 304
 
           #puts "Getting normal image through #{tdata[:name]}"
           res2 = tdata[:http].get("#{tdata[:path_pre]}image.rhtml?path64=#{Base64.encode64("image.png").to_s.strip}&rounded_corners=8&width=550")
-          res2.content_type.should eql("image/png")
+          expect(res2.content_type).to eq "image/png"
 
-          res1.body.bytesize.should eql(res2.body.bytesize)
+          expect(res1.body.bytesize).to eq res2.body.bytesize
         end
       end
     rescue => e
