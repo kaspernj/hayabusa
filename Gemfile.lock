@@ -35,7 +35,7 @@ GEM
     http2 (0.0.36)
       string-cases (~> 0)
     json (2.6.3)
-    knjrbfw (0.0.115)
+    knjrbfw (0.0.116)
       datet
       http2
       php4r
