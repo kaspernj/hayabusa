@@ -123,7 +123,7 @@ class Hayabusa
     if arg.is_a?(Hash) and Knj::ArrayExt.hash_numeric_keys?(arg)
       arr = []
       
-      arg.each do |key, val|
+      arg.each_value do |val|
         arr << val
       end
       

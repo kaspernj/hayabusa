@@ -75,7 +75,7 @@ class Hayabusa
   #Writes all session-data to the database (normally it is cached in memory and not updated on change).
   def sessions_flush
     if @sessions
-      @sessions.each do |session_hash, session_data|
+      @sessions.each_value do |session_data|
         self.log_puts("Flushing session: #{session_data[:dbobj].id}") if @debug
         session_data[:dbobj].flush
       end
