@@ -121,7 +121,7 @@ class Hayabusa::Datarow
           end
         end
 
-        colname = "#{self.name.to_s.split("::").last.to_s.downcase}_id".to_sym if colname.to_s.empty?
+        colname = :"#{self.name.to_s.split("::").last.to_s.downcase}_id" if colname.to_s.empty?
 
         if val[:depends]
           @depending_data = [] if !@depending_data
@@ -151,7 +151,7 @@ class Hayabusa::Datarow
       end
 
       raise "No classname given." if !classname
-      methodname = "#{classname.to_s.downcase}s".to_sym if !methodname
+      methodname = :"#{classname.to_s.downcase}s" if !methodname
       raise "No column was given for '#{self.name}' regarding has-many-class: '#{classname}'." if !colname
 
       if val.is_a?(Hash) and val.key?(:where)
@@ -192,7 +192,7 @@ class Hayabusa::Datarow
       if val.is_a?(Symbol)
         classname = val
         methodname = val.to_s.downcase.to_sym
-        colname = "#{val.to_s.downcase}_id".to_sym
+        colname = :"#{val.to_s.downcase}_id"
       elsif val.is_a?(Array)
         classname, colname, methodname = *val
       elsif val.is_a?(Hash)
@@ -214,7 +214,7 @@ class Hayabusa::Datarow
         end
 
         if val[:required]
-          colname = "#{classname.to_s.downcase}_id".to_sym if !colname
+          colname = :"#{classname.to_s.downcase}_id" if !colname
           self.required_data << {
             :col => colname,
             :class => classname
@@ -225,7 +225,7 @@ class Hayabusa::Datarow
       end
 
       methodname = classname.to_s.downcase if !methodname
-      colname = "#{classname.to_s.downcase}_id".to_sym if !colname
+      colname = :"#{classname.to_s.downcase}_id" if !colname
       self.define_one_methods(classname, methodname, colname)
 
       self.joined_tables(
@@ -256,7 +256,7 @@ class Hayabusa::Datarow
       @translations << val
 
       val_dc = val.to_s.downcase
-      table_name = "Translation_#{val_dc}".to_sym
+      table_name = :"Translation_#{val_dc}"
 
       joined_tables(
         table_name => {
@@ -360,7 +360,7 @@ class Hayabusa::Datarow
 
       if @columns_joined_tables
         @columns_joined_tables.each do |table_name, table_data|
-          table_data[:where].each do |key, val|
+          table_data[:where].each_value do |val|
             val[:table] = @table if val.is_a?(Hash) and !val.key?(:table) and val[:type].to_sym == :col
           end
 
@@ -407,7 +407,7 @@ class Hayabusa::Datarow
     sql << " WHERE 1=1"
     sql << ret[:sql_where]
 
-    args.each do |key, val|
+    args.each_key do |key|
       case key
         when "return_sql"
           #ignore
@@ -760,7 +760,7 @@ class Hayabusa::Datarow
   #Defines the boolean-methods based on enum-columns.
   def self.define_bool_methods(inst_methods, col_name)
     #Spawns a method on the class which returns true if the data is 1.
-    if !inst_methods.include?("#{col_name}?".to_sym)
+    if !inst_methods.include?(:"#{col_name}?")
       define_method("#{col_name}?") do
         return true if self[col_name.to_sym].to_s == "1"
         return false
@@ -770,7 +770,7 @@ class Hayabusa::Datarow
 
   #Defines date- and time-columns based on datetime- and date-columns.
   def self.define_date_methods(inst_methods, col_name)
-    if !inst_methods.include?("#{col_name}_str".to_sym)
+    if !inst_methods.include?(:"#{col_name}_str")
       define_method("#{col_name}_str") do |*method_args|
         if Datet.is_nullstamp?(self[col_name])
           return self.class.ob.events.call(:no_date, self.class.name)
@@ -790,7 +790,7 @@ class Hayabusa::Datarow
 
   #Define various methods based on integer-columns.
   def self.define_numeric_methods(inst_methods, col_name)
-    if !inst_methods.include?("#{col_name}_format".to_sym)
+    if !inst_methods.include?(:"#{col_name}_format")
       define_method("#{col_name}_format") do |*method_args|
         return Knj::Locales.number_out(self[col_name], *method_args)
       end
@@ -802,7 +802,7 @@ class Hayabusa::Datarow
   #  user = Models::User.by_username('John Doe')
   #  print user.id
   def self.define_text_methods(inst_methods, col_name)
-    if !inst_methods.include?("by_#{col_name}".to_sym) and RUBY_VERSION.to_s.slice(0, 3) != "1.8"
+    if !inst_methods.include?(:"by_#{col_name}") and RUBY_VERSION.to_s.slice(0, 3) != "1.8"
       define_singleton_method("by_#{col_name}") do |arg|
         return self.class.ob.get_by(self.class.table, {col_name.to_s => arg})
       end
@@ -811,7 +811,7 @@ class Hayabusa::Datarow
 
   #Defines dbtime-methods based on time-columns.
   def self.define_time_methods(inst_methods, col_name)
-    if !inst_methods.include?("#{col_name}_dbt".to_sym)
+    if !inst_methods.include?(:"#{col_name}_dbt")
       define_method("#{col_name}_dbt") do
         return Knj::Db::Dbtime.new(self[col_name.to_sym])
       end
@@ -833,7 +833,7 @@ class Hayabusa::Datarow
       return self.class.ob.list(classname, list_args, &block)
     end
 
-    define_method("#{methodname}_count".to_sym) do |*args|
+    define_method(:"#{methodname}_count") do |*args|
       list_args = args[0] if args and args[0]
       list_args = {} if !list_args
       list_args[colname.to_s] = self.id
@@ -842,7 +842,7 @@ class Hayabusa::Datarow
       return self.class.ob.list(classname, list_args)
     end
 
-    define_method("#{methodname}_last".to_sym) do |args|
+    define_method(:"#{methodname}_last") do |args|
       args = {} if !args
       return self.class.ob.list(classname, {"orderby" => [["id", "desc"]], "limit" => 1}.merge(args))
     end
@@ -854,7 +854,7 @@ class Hayabusa::Datarow
       return self.class.ob.get_try(self, colname, classname)
     end
 
-    methodname_html = "#{methodname}_html".to_sym
+    methodname_html = :"#{methodname}_html"
     define_method(methodname_html) do |*args|
       obj = self.__send__(methodname)
       return self.class.ob.events.call(:no_html, classname) if !obj
@@ -863,7 +863,7 @@ class Hayabusa::Datarow
       return obj.html(*args)
     end
 
-    methodname_name = "#{methodname}_name".to_sym
+    methodname_name = :"#{methodname}_name"
     define_method(methodname_name) do |*args|
       obj = self.__send__(methodname)
       return self.class.ob.events.call(:no_name, classname) if !obj

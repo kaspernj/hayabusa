@@ -46,8 +46,8 @@ class Hayabusa::Models::Log_access < Hayabusa::Datarow
   end
 
   def data_hash(type)
-    col_keys_id = "#{type}_keys_data_id".to_sym
-    col_values_id = "#{type}_values_data_id".to_sym
+    col_keys_id = :"#{type}_keys_data_id"
+    col_values_id = :"#{type}_values_data_id"
 
     keys_id = self[col_keys_id]
     values_id = self[col_values_id]

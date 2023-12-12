@@ -80,7 +80,7 @@ class Hayabusa::Revision
 
                   actual_after = nil
                   set_next = false
-                  cols.each do |col_name, col_iter|
+                  cols.each_value do |col_iter|
                     if col_iter.name == col_obj.name
                       break
                     else

@@ -120,7 +120,7 @@ class Hayabusa::Http_session::Response
     # The status header is used to make CGI or FCGI use the correct status-code.
     self.header("Status", "#{@status} #{STATUS_CODES[@status]}")
 
-    @headers.each do |key, val|
+    @headers.each_value do |val|
       res << "#{val[0]}: #{val[1]}#{NL}"
     end
 
@@ -156,7 +156,7 @@ class Hayabusa::Http_session::Response
       @cgroup.write_to_socket
       @socket.write("0#{NL}")
 
-      @headers_trailing.each do |header_id_str, header|
+      @headers_trailing.each_value do |header|
         @socket.write("#{header[0]}: #{header[1]}#{NL}")
       end
 
