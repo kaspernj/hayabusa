@@ -722,7 +722,7 @@ class Hayabusa::Datarow
 
   #Various methods to define methods based on the columns for the datarow.
   def self.define_translation_methods(args)
-    define_method("#{args[:val_dc]}=") do |newtransval|
+    define_method(:"#{args[:val_dc]}=") do |newtransval|
       begin
         _hb.trans_set(self, {
           args[:val] => newtransval
@@ -734,7 +734,7 @@ class Hayabusa::Datarow
       end
     end
 
-    define_method("#{args[:val_dc]}") do
+    define_method(:"#{args[:val_dc]}") do
       begin
         return _hb.trans(self, args[:val])
       rescue NameError
@@ -742,7 +742,7 @@ class Hayabusa::Datarow
       end
     end
 
-    define_method("#{args[:val_dc]}_html") do
+    define_method(:"#{args[:val_dc]}_html") do
       begin
         str = _hb.trans(self, args[:val])
       rescue NameError
@@ -761,7 +761,7 @@ class Hayabusa::Datarow
   def self.define_bool_methods(inst_methods, col_name)
     #Spawns a method on the class which returns true if the data is 1.
     if !inst_methods.include?(:"#{col_name}?")
-      define_method("#{col_name}?") do
+      define_method(:"#{col_name}?") do
         return true if self[col_name.to_sym].to_s == "1"
         return false
       end
@@ -771,7 +771,7 @@ class Hayabusa::Datarow
   #Defines date- and time-columns based on datetime- and date-columns.
   def self.define_date_methods(inst_methods, col_name)
     if !inst_methods.include?(:"#{col_name}_str")
-      define_method("#{col_name}_str") do |*method_args|
+      define_method(:"#{col_name}_str") do |*method_args|
         if Datet.is_nullstamp?(self[col_name])
           return self.class.ob.events.call(:no_date, self.class.name)
         end
@@ -791,7 +791,7 @@ class Hayabusa::Datarow
   #Define various methods based on integer-columns.
   def self.define_numeric_methods(inst_methods, col_name)
     if !inst_methods.include?(:"#{col_name}_format")
-      define_method("#{col_name}_format") do |*method_args|
+      define_method(:"#{col_name}_format") do |*method_args|
         return Knj::Locales.number_out(self[col_name], *method_args)
       end
     end
@@ -803,7 +803,7 @@ class Hayabusa::Datarow
   #  print user.id
   def self.define_text_methods(inst_methods, col_name)
     if !inst_methods.include?(:"by_#{col_name}") and RUBY_VERSION.to_s.slice(0, 3) != "1.8"
-      define_singleton_method("by_#{col_name}") do |arg|
+      define_singleton_method(:"by_#{col_name}") do |arg|
         return self.class.ob.get_by(self.class.table, {col_name.to_s => arg})
       end
     end
@@ -812,7 +812,7 @@ class Hayabusa::Datarow
   #Defines dbtime-methods based on time-columns.
   def self.define_time_methods(inst_methods, col_name)
     if !inst_methods.include?(:"#{col_name}_dbt")
-      define_method("#{col_name}_dbt") do
+      define_method(:"#{col_name}_dbt") do
         return Knj::Db::Dbtime.new(self[col_name.to_sym])
       end
     end
