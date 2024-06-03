@@ -61,7 +61,7 @@ GEM
       net-protocol
     observer (0.1.2)
     parallel (1.24.0)
-    parser (3.3.1.0)
+    parser (3.3.2.0)
       ast (~> 2.4.1)
       racc
     php4r (0.0.4)
@@ -69,11 +69,12 @@ GEM
       http2
       string-strtr
     pkg-config (1.5.6)
-    racc (1.7.3)
+    racc (1.8.0)
     rainbow (3.1.1)
     ref (2.0.0)
-    regexp_parser (2.9.0)
-    rexml (3.2.6)
+    regexp_parser (2.9.2)
+    rexml (3.2.8)
+      strscan (>= 3.0.9)
     rmagick (5.5.0)
       observer (~> 0.1)
       pkg-config (~> 1.4)
@@ -112,7 +113,7 @@ GEM
       rubocop-ast (>= 1.31.1, < 2.0)
     rubocop-rake (0.6.0)
       rubocop (~> 1.0)
-    rubocop-rspec (2.29.2)
+    rubocop-rspec (2.30.0)
       rubocop (~> 1.40)
       rubocop-capybara (~> 2.17)
       rubocop-factory_bot (~> 2.22)
@@ -129,6 +130,7 @@ GEM
       mini_portile2 (~> 2.8.0)
     string-cases (0.0.4)
     string-strtr (0.0.3)
+    strscan (3.1.0)
     timeout (0.3.1)
     tpool (0.0.4)
     tsafe (0.0.12)
