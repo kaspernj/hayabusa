@@ -2,9 +2,9 @@ class Hayabusa::Models::Session < Hayabusa::Datarow
   attr_reader :edata
   attr_accessor :sess_data
 
-  def initialize(*args, &block)
+  def initialize(...)
     @edata = {}
-    super(*args, &block)
+    super
 
     if self[:sess_data].to_s.length > 0
       begin
