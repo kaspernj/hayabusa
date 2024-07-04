@@ -73,7 +73,7 @@ GEM
     rainbow (3.1.1)
     ref (2.0.0)
     regexp_parser (2.9.2)
-    rexml (3.3.0)
+    rexml (3.3.1)
       strscan
     rmagick (5.5.0)
       observer (~> 0.1)
@@ -109,7 +109,7 @@ GEM
       rubocop-ast (>= 1.31.1, < 2.0)
     rubocop-rake (0.6.0)
       rubocop (~> 1.0)
-    rubocop-rspec (3.0.1)
+    rubocop-rspec (3.0.2)
       rubocop (~> 1.61)
     ruby-progressbar (1.13.0)
     ruby_process (0.0.13)
