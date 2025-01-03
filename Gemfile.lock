@@ -19,14 +19,14 @@ GEM
     ast (2.4.2)
     auto_autoloader (0.0.5)
       string-cases
-    baza (0.0.38)
-      array_enumerator (~> 0.0.10)
-      auto_autoloader (~> 0.0.5)
-      datet (~> 0.0.25)
-      event_handler (~> 0.0.0)
-      simple_delegate (~> 0.0.2)
-      string-cases (~> 0.0.4)
-      wref (~> 0.0.8)
+    baza (0.0.39)
+      array_enumerator (>= 0.0.10)
+      auto_autoloader (>= 0.0.5)
+      datet (>= 0.0.25)
+      event_handler
+      simple_delegate (>= 0.0.2)
+      string-cases (>= 0.0.4)
+      wref (>= 0.0.11)
     date (3.3.3)
     datet (0.0.25)
     diff-lcs (1.5.1)
@@ -124,10 +124,8 @@ GEM
     unicode-display_width (3.1.2)
       unicode-emoji (~> 4.0, >= 4.0.4)
     unicode-emoji (4.0.4)
-    weakling (0.0.3)
-    wref (0.0.10)
+    wref (0.0.11)
       ref
-      weakling
 
 PLATFORMS
   ruby
