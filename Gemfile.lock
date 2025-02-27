@@ -19,6 +19,7 @@ GEM
     ast (2.4.2)
     auto_autoloader (0.0.5)
       string-cases
+    base64 (0.2.0)
     baza (0.0.38)
       array_enumerator (~> 0.0.10)
       auto_autoloader (~> 0.0.5)
@@ -133,6 +134,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  base64
   bundler (>= 1.0.0)
   hayabusa!
   json
