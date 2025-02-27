@@ -2,23 +2,23 @@ rvm: true
 builds:
   build_1:
     environment:
-      RUBY_VERSION: 2.7.8
-    name: Ruby 2.7.8
+      RUBY_VERSION: 3.2.7
+    name: Ruby 3.2.7
     script:
       - bundle exec rspec
   build_2:
     environment:
-      RUBY_VERSION: 3.0.3
-    name: Ruby 3.0.3
+      RUBY_VERSION: 3.3.7
+    name: Ruby 3.3.7
     script:
       - bundle exec rspec
   build_3:
     environment:
-      RUBY_VERSION: 3.1.2
-    name: Ruby 3.1.2
+      RUBY_VERSION: 3.4.2
+    name: Ruby 3.4.2
     script:
       - bundle exec rspec
-  build_4:
+  build_5:
     name: Linters
     script:
       - bundle exec rubocop
