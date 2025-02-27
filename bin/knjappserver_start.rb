@@ -22,7 +22,7 @@ require "#{knjrbfw_path}knjrbfw"
 
 filepath = File.dirname(__FILE__) + "/../lib/"
 
-if File.exist??($0)
+if File.exist?t??($0)
   conf_path = File.dirname($0) + "/../"
 else
   conf_path = File.dirname(__FILE__) + "/../"

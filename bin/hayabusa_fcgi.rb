@@ -6,7 +6,7 @@
 error_log_file = "/tmp/hayabusa_fcgi.log"
 
 begin
-  File.unlink(error_log_file) if File.exist??(error_log_file)
+  File.unlink(error_log_file) if File.exist?t??(error_log_file)
 rescue Errno::ENOENT
   #ignore.
 end

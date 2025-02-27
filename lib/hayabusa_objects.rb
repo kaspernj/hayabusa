@@ -232,7 +232,7 @@ class Hayabusa::Objects
         if doreq
           filename = "#{@args[:class_path]}/#{@args[:class_pre]}#{classname.to_s.downcase}.rb"
           filename_req = "#{@args[:class_path]}/#{@args[:class_pre]}#{classname.to_s.downcase}"
-          raise "Class file could not be found: #{filename}." if !File.exist??(filename)
+          raise "Class file could not be found: #{filename}." if !File.exist?t??(filename)
           require filename_req
         end
       end

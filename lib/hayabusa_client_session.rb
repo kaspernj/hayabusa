@@ -24,7 +24,7 @@ class Hayabusa::Client_session
 
   #Forces the output to be read from a file.
   def force_fileread(fpath)
-    raise "Invalid filepath given: '#{fpath}'." if !fpath || !File.exist??(fpath)
+    raise "Invalid filepath given: '#{fpath}'." if !fpath || !File.exist?t??(fpath)
     @resp.chunked = false
     @resp.header("Content-Length", File.size(fpath))
     @cgroup.new_io(:type => :file, :path => fpath)
@@ -109,7 +109,7 @@ class Hayabusa::Client_session
           end
 
           if @page_path
-            if !File.exist??(@page_path)
+            if !File.exist?t??(@page_path)
               @resp.status = 404
               @resp.header("Content-Type", "text/html")
               @cgroup.write("File you are looking for was not found: '#{@meta["REQUEST_URI"]}'.")

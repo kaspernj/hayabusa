@@ -30,7 +30,7 @@ ARGV.each do |val|
   end
 end
 
-raise "'conf-path' from arguments could not be found: '#{opts[:conf_path]}'." if !opts[:conf_path] or !File.exist??(opts[:conf_path])
+raise "'conf-path' from arguments could not be found: '#{opts[:conf_path]}'." if !opts[:conf_path] or !File.exist?t??(opts[:conf_path])
 require opts[:conf_path]
 
 
@@ -58,5 +58,5 @@ puts Base64.strict_encode64(Marshal.dump(
 begin
   fcgi_server.hayabusa.join
 ensure
-  File.unlink(opts[:fcgi_data_path]) if opts[:fcgi_data_path] and File.exist??(opts[:fcgi_data_path])
+  File.unlink(opts[:fcgi_data_path]) if opts[:fcgi_data_path] and File.exist?t??(opts[:fcgi_data_path])
 end

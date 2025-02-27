@@ -253,7 +253,7 @@ class Hayabusa::Http_session::Request
   #Deletes all tempfiles created by this object. This is useually called from Http_session at the end of a request.
   def delete_tempfiles
     @files_arr.delete_if do |tempfile_path|
-      File.unlink(tempfile_path) if File.exist??(tempfile_path)
+      File.unlink(tempfile_path) if File.exist?t??(tempfile_path)
       true
     end
   end
