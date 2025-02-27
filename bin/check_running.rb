@@ -55,7 +55,7 @@ tmpdir = "#{Knj::Os.tmpdir}/hayabusa"
 tmppath = "#{tmpdir}/run_#{options[:title]}"
 count = 0
 
-if File.exist?t??(tmppath)
+if File.exist?(tmppath)
   pid = File.read(tmppath).to_s.strip
   count = Knj::Unix_proc.list("pids" => [pid]).length if pid.to_s.length > 0
 end

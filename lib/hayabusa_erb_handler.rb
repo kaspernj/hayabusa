@@ -11,7 +11,7 @@ class Hayabusa::Erb_handler
       @connected[eruby.__id__] = true
     end
 
-    if !File.exist?t??(httpsess.page_path)
+    if !File.exist?(httpsess.page_path)
       eruby.import("#{File.dirname(__FILE__)}/../pages/error_notfound.rhtml")
     else
       eruby.import(httpsess.page_path)

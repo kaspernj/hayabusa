@@ -50,7 +50,7 @@ class Hayabusa::Fcgi
 
     #Figure out if this should be a host-FCGI-process or a proxy-FCGI-process.
     fcgi_config_fp = "#{Knj::Os.tmpdir}/hayabusa_fcgi_#{hayabusa_conf[:title]}_fcgi.conf"
-    FileUtils.touch(fcgi_config_fp) if !File.exist?t??(fcgi_config_fp)
+    FileUtils.touch(fcgi_config_fp) if !File.exist?(fcgi_config_fp)
 
     File.open(fcgi_config_fp) do |fp|
       fp.flock(File::LOCK_EX)

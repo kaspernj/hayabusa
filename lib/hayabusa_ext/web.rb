@@ -62,7 +62,7 @@ class Hayabusa
   #  _hb.header("Content-Type", "text/javascript")
   #  _hb.serve_file("somefile.js")
   def serve_file(filepath)
-    raise "File doesnt exist: '#{filepath}'." if !File.exist?t??(filepath)
+    raise "File doesnt exist: '#{filepath}'." if !File.exist?(filepath)
     httpsess = _httpsession
     headers = httpsess.headers
     resp = httpsess.resp
