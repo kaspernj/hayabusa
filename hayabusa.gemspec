@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.authors = ["Kasper Stöckel"]
   s.description = "A threadded web/app-server that focuses on threadding, shared ressources, speed and more."
-  s.email = "k@spernj.org"
+  s.email = "kasper@diestoeckels.de"
   s.executables = ["check_running.rb", "hayabusa_benchmark.rb", "hayabusa_cgi.rb", "hayabusa_fcgi.fcgi", "hayabusa_fcgi.rb", "hayabusa_fcgi_server.rb", "hayabusa_spec_restart.rb", "knjappserver_start.rb"]
   s.extra_rdoc_files = [
     "LICENSE.txt",

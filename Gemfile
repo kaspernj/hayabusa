@@ -1,6 +1,8 @@
 source "http://rubygems.org"
 gemspec
 
+gem "base64", require: false
+
 group :development do
   gem "bundler", ">= 1.0.0"
   gem "json", ">= 0"
