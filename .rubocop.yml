@@ -6,9 +6,11 @@ AllCops:
   NewCops: enable
   TargetRubyVersion: 2.7
 
-require:
+plugins:
   - rubocop-performance
   - rubocop-rake
+
+require:
   - rubocop-rspec
 
 # Layout/AccessModifierIndentation:
