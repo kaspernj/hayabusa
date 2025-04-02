@@ -1,6 +1,9 @@
 source "http://rubygems.org"
 gemspec
 
+gem "base64", require: false
+gem "knjrbfw", path: "/home/dev/Development/knjrbfw"
+
 group :development do
   gem "bundler", ">= 1.0.0"
   gem "json", ">= 0"
