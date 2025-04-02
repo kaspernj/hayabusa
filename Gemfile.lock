@@ -4,13 +4,22 @@ PATH
     hayabusa (0.0.30)
       baza (>= 0.0.38)
       datet
-      erubis
       http2
-      knjrbfw (>= 0.0.114)
       mail
       ruby_process
       tpool
       wref (>= 0.0.6)
+
+PATH
+  remote: /home/dev/Development/knjrbfw
+  specs:
+    knjrbfw (0.0.116)
+      datet
+      http2
+      php4r
+      ruby_process
+      tsafe
+      wref (>= 0.0.8)
 
 GEM
   remote: http://rubygems.org/
@@ -19,6 +28,7 @@ GEM
     ast (2.4.2)
     auto_autoloader (0.0.5)
       string-cases
+    base64 (0.2.0)
     baza (0.0.38)
       array_enumerator (~> 0.0.10)
       auto_autoloader (~> 0.0.5)
@@ -30,19 +40,11 @@ GEM
     date (3.3.3)
     datet (0.0.25)
     diff-lcs (1.5.1)
-    erubis (2.7.0)
     event_handler (0.0.0)
     http2 (0.0.36)
       string-cases (~> 0)
-    json (2.10.2)
-    knjrbfw (0.0.116)
-      datet
-      http2
-      php4r
-      ruby_process
-      tsafe
-      wref (>= 0.0.8)
-    language_server-protocol (3.17.0.3)
+    json (2.10.1)
+    language_server-protocol (3.17.0.4)
     mail (2.8.1)
       mini_mime (>= 0.1.1)
       net-imap
@@ -131,9 +133,11 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  base64
   bundler (>= 1.0.0)
   hayabusa!
   json
+  knjrbfw!
   php4r
   rmagick
   rspec (>= 2.3.0)
@@ -144,4 +148,4 @@ DEPENDENCIES
   sqlite3
 
 BUNDLED WITH
-   2.3.8
+   2.6.5
