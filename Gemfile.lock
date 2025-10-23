@@ -27,7 +27,7 @@ GEM
       simple_delegate (~> 0.0.2)
       string-cases (~> 0.0.4)
       wref (~> 0.0.8)
-    date (3.3.3)
+    date (3.4.1)
     datet (0.0.25)
     diff-lcs (1.6.2)
     erubis (2.7.0)
@@ -44,21 +44,23 @@ GEM
       wref (>= 0.0.8)
     language_server-protocol (3.17.0.4)
     lint_roller (1.1.0)
-    mail (2.8.1)
+    logger (1.7.0)
+    mail (2.9.0)
+      logger
       mini_mime (>= 0.1.1)
       net-imap
       net-pop
       net-smtp
-    mini_mime (1.1.2)
+    mini_mime (1.1.5)
     mini_portile2 (2.8.5)
-    net-imap (0.3.4)
+    net-imap (0.4.22)
       date
       net-protocol
     net-pop (0.1.2)
       net-protocol
-    net-protocol (0.2.1)
+    net-protocol (0.2.2)
       timeout
-    net-smtp (0.3.3)
+    net-smtp (0.5.1)
       net-protocol
     observer (0.1.2)
     parallel (1.27.0)
@@ -125,7 +127,7 @@ GEM
       mini_portile2 (~> 2.8.0)
     string-cases (0.0.4)
     string-strtr (0.0.3)
-    timeout (0.3.1)
+    timeout (0.4.3)
     tpool (0.0.4)
     tsafe (0.0.12)
     unicode-display_width (3.1.4)
