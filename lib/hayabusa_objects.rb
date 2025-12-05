@@ -232,7 +232,7 @@ class Hayabusa::Objects
         if doreq
           filename = "#{@args[:class_path]}/#{@args[:class_pre]}#{classname.to_s.downcase}.rb"
           filename_req = "#{@args[:class_path]}/#{@args[:class_pre]}#{classname.to_s.downcase}"
-          raise "Class file could not be found: #{filename}." if !File.exists?(filename)
+          raise "Class file could not be found: #{filename}." if !File.exist?(filename)
           require filename_req
         end
       end
@@ -323,11 +323,11 @@ class Hayabusa::Objects
   def get(classname, data, args = nil)
     classname = classname.to_sym
 
-    if data.is_a?(Integer) or data.is_a?(String) or data.is_a?(Fixnum)
+    if data.is_a?(Integer) || data.is_a?(String) || data.class.name == "Fixnum" # rubocop:disable Style/ClassEqualityComparison
       id = data.to_i
-    elsif data.is_a?(Hash) and data.key?(@args[:col_id].to_sym)
+    elsif data.is_a?(Hash) && data.key?(@args[:col_id].to_sym)
       id = data[@args[:col_id].to_sym].to_i
-    elsif data.is_a?(Hash) and data.key?(@args[:col_id].to_s)
+    elsif data.is_a?(Hash) && data.key?(@args[:col_id].to_s)
       id = data[@args[:col_id].to_s].to_i
     elsif
       raise ArgumentError, "Unknown data for class '#{classname}': '#{data.class.to_s}' (#{data})."
@@ -336,7 +336,7 @@ class Hayabusa::Objects
     if @objects.key?(classname)
       case @args[:cache]
         when :weak
-          if obj = @objects[classname].get(id) and obj.id.to_i == id
+          if obj = @objects[classname].get(id) && obj.id.to_i == id
             return obj
           end
         else

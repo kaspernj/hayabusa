@@ -48,7 +48,7 @@ class Hayabusa
     require "rubygems"
     gems = [
       [:Knj, "knjrbfw"],
-      [:Erubis, "erubis"],
+      [:Erb, "erb"],
       [:Tsafe, "tsafe"],
       [:Tpool, "tpool"]
     ]
@@ -61,7 +61,7 @@ class Hayabusa
 
       fpath = "#{@@path}/../../#{gem_i[1]}/lib/#{gem_i[1]}.rb"
 
-      if File.exists?(fpath)
+      if File.exist?(fpath)
         puts "Loading custom gem-path: '#{fpath}'." if @debug
         require fpath
       else
@@ -259,7 +259,7 @@ class Hayabusa
     tmpdir = "#{Knj::Os.tmpdir}/hayabusa"
     tmppath = "#{tmpdir}/run_#{@config[:title]}"
 
-    if !File.exists?(tmpdir)
+    if !File.exist?(tmpdir)
       Dir.mkdir(tmpdir)
       File.chmod(0777, tmpdir)
     end
@@ -382,7 +382,7 @@ class Hayabusa
     end
 
     rpath = File.realpath(fpath)
-    raise "No such filepath: #{fpath}" if !rpath or !File.exists?(rpath)
+    raise "No such filepath: #{fpath}" if !rpath or !File.exist?(rpath)
 
     return true if @mod_files[rpath]
 
