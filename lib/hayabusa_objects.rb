@@ -323,7 +323,7 @@ class Hayabusa::Objects
   def get(classname, data, args = nil)
     classname = classname.to_sym
 
-    if data.is_a?(Integer) || data.is_a?(String)
+    if data.is_a?(Integer) || data.is_a?(String) || data.class.name == "Fixnum"
       id = data.to_i
     elsif data.is_a?(Hash) && data.key?(@args[:col_id].to_sym)
       id = data[@args[:col_id].to_sym].to_i
