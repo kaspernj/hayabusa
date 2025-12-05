@@ -8,7 +8,7 @@ class Hayabusa::Client_session
     return @modified_since if @modified_since
     return false if !@meta["HTTP_IF_MODIFIED_SINCE"]
     
-    mod_match = @meta["HTTP_IF_MODIFIED_SINCE"].match(/^([A-z]+),\s+(\d+)\s+([A-z]+)\s+(\d+)\s+(\d+):(\d+):(\d+)\s+(.+)$/)
+    mod_match = @meta["HTTP_IF_MODIFIED_SINCE"].match(/^([A-Za-z]+),\s+(\d+)\s+([A-Za-z]+)\s+(\d+)\s+(\d+):(\d+):(\d+)\s+(.+)$/)
     raise "Could not parse 'HTTP_IF_MODIFIED_SINCE'." if !mod_match
     
     month_no = Datet.month_str_to_no(mod_match[3])
