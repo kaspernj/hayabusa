@@ -10,17 +10,6 @@ PATH
       tpool
       wref (>= 0.0.6)
 
-PATH
-  remote: /home/dev/Development/knjrbfw
-  specs:
-    knjrbfw (0.0.116)
-      datet
-      http2
-      php4r
-      ruby_process
-      tsafe
-      wref (>= 0.0.8)
-
 GEM
   remote: http://rubygems.org/
   specs:
@@ -44,6 +33,13 @@ GEM
     http2 (0.0.36)
       string-cases (~> 0)
     json (2.17.1)
+    knjrbfw (0.0.116)
+      datet
+      http2
+      php4r
+      ruby_process
+      tsafe
+      wref (>= 0.0.8)
     language_server-protocol (3.17.0.5)
     lint_roller (1.1.0)
     logger (1.7.0)
@@ -146,7 +142,7 @@ DEPENDENCIES
   bundler (>= 1.0.0)
   hayabusa!
   json
-  knjrbfw!
+  knjrbfw
   php4r
   rmagick
   rspec (>= 2.3.0)
