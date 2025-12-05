@@ -9,8 +9,6 @@ AllCops:
 plugins:
   - rubocop-performance
   - rubocop-rake
-
-require:
   - rubocop-rspec
 
 # Layout/AccessModifierIndentation:
