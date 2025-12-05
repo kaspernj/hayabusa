@@ -32,7 +32,7 @@ describe "Hayabusa" do
   )
 
   $appserver = Hayabusa.new(
-    :debug => false,
+    :debug => true,
     :title => "SpecTest",
     :port => 1515,
     :doc_root => "#{File.dirname(__FILE__)}/../pages",

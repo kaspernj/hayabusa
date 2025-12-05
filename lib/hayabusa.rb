@@ -48,7 +48,7 @@ class Hayabusa
     require "rubygems"
     gems = [
       [:Knj, "knjrbfw"],
-      [:Erubis, "erubis"],
+      [:Erb, "erb"],
       [:Tsafe, "tsafe"],
       [:Tpool, "tpool"]
     ]
