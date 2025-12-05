@@ -1211,7 +1211,7 @@ class Hayabusa::Objects
         end
 
         found = true
-      elsif match = key.match(/^([A-z_\d]+)_(search|has)$/) and args[:cols].key?(match[1]) != nil
+      elsif match = key.match(/^([A-Za-z_\d]+)_(search|has)$/) and args[:cols].key?(match[1]) != nil
         if match[2] == "search"
           Knj::Strings.searchstring(val).each do |str|
             sql_where << " AND #{table}`#{db.escape_column(match[1])}` LIKE '%#{db.esc(str)}%'"
@@ -1225,7 +1225,7 @@ class Hayabusa::Objects
         end
 
         found = true
-      elsif match = key.match(/^([A-z_\d]+)_(not|lower)$/) and args[:cols].key?(match[1])
+      elsif match = key.match(/^([A-Za-z_\d]+)_(not|lower)$/) and args[:cols].key?(match[1])
         if match[2] == "not"
           if val.is_a?(Array)
             if val.empty?
