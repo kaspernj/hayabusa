@@ -59,7 +59,7 @@ def _db
   return Thread.current[:hayabusa][:hb].db_handler if Thread.current[:hayabusa] and Thread.current[:hayabusa][:hb] #This is useually used when using autoload-argument for the appserver.
 end
 
-#This function makes it possible to define methods in ERubis-parsed files (else _buf-variable wouldnt be globally available).
+#This function makes it possible to define methods in ERB-parsed files (else _buf-variable wouldnt be globally available).
 def _buf
   return $stdout
 end

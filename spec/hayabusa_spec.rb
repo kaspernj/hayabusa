@@ -23,7 +23,7 @@ describe "Hayabusa" do
   end
 
   db_path = "#{Knj::Os.tmpdir}/hayabusa_rspec.sqlite3"
-  File.unlink(db_path) if File.exists?(db_path)
+  File.unlink(db_path) if File.exist?(db_path)
 
   db = Baza::Db.new(
     :type => "sqlite3",
@@ -32,7 +32,7 @@ describe "Hayabusa" do
   )
 
   $appserver = Hayabusa.new(
-    :debug => false,
+    :debug => true,
     :title => "SpecTest",
     :port => 1515,
     :doc_root => "#{File.dirname(__FILE__)}/../pages",
@@ -92,7 +92,7 @@ describe "Hayabusa" do
     img_from_path = "#{Knj.knjrbfw_path}/webscripts/image.rhtml"
     img_to_path = "#{File.realpath("#{File.dirname(__FILE__)}/../pages")}/image.rhtml"
 
-    raise "Invalid from path: '#{img_from_path}'." unless File.exists?(img_from_path)
+    raise "Invalid from path: '#{img_from_path}'." unless File.exist?(img_from_path)
 
     File.unlink(img_to_path) if File.symlink?(img_to_path)
     File.symlink(img_from_path, img_to_path)
@@ -136,7 +136,7 @@ describe "Hayabusa" do
       STDERR.puts e.backtrace
       raise e
     ensure
-      File.unlink(img_to_path) if File.exists?(img_to_path)
+      File.unlink(img_to_path) if File.exist?(img_to_path)
     end
   end
 
