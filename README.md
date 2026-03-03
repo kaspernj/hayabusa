@@ -2,7 +2,7 @@
 
 This is a multithreadded webserver that runs under Ruby 1.9.2 or JRuby. It runs under one single process and is able to handle multiple simultanious HTTP requests with thread-safety.
 
-It uses ERubis to parse .rhtml files and caches the bytecode for Ruby-files.
+It uses ERB to parse .rhtml files and caches the bytecode for Ruby-files.
 
 
 ## Contributing to hayabusa

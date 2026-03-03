@@ -9,14 +9,14 @@ begin
   args = {
     :filename => "benchmark.rhtml"
   }
-  
+
   OptionParser.new do |opts|
     opts.banner = "Usage: benchmark.rb [options]"
-    
+
     opts.on("-f FILENAME", "--file FILENAME", "The filename that should be requested from the server.") do |t|
       args[:filename] = t
     end
-    
+
     opts.on("-k PATH", "--knjrbfw PATH", "The path of knjrbfw if it should not be loaded from gems.") do |path|
       args[:knjrbfw_path] = path
     end
@@ -37,7 +37,7 @@ appserver_args = {
 }
 
 require "rubygems"
-require "erubis"
+require "erb"
 require "#{args[:knjrbfw_path]}/knjrbfw.rb"
 require "../hayabusa.rb"
 
@@ -56,14 +56,14 @@ count_requests = 0
 1.upto(50) do |count_thread|
   Knj::Thread.new(count_thread) do |count_thread|
     print "Thread #{count_thread} started.\n"
-    
+
     http = Http2.new(
       :host => "localhost",
       :port => 15081,
       :user_agent => "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.1; debugid:#{count_thread}) Gecko/20060111 Firefox/3.6.0.1",
       :debug => false
     )
-    
+
     loop do
       resp = http.get(:url => args[:filename])
       count_requests += 1
