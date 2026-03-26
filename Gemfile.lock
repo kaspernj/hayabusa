@@ -52,7 +52,7 @@ GEM
       net-pop
       net-smtp
     mini_mime (1.1.5)
-    mini_portile2 (2.8.5)
+    mini_portile2 (2.8.9)
     net-imap (0.4.22)
       date
       net-protocol
@@ -123,7 +123,7 @@ GEM
       tsafe
       wref
     simple_delegate (0.0.4)
-    sqlite3 (1.7.3)
+    sqlite3 (2.8.1)
       mini_portile2 (~> 2.8.0)
     string-cases (0.0.4)
     string-strtr (0.0.3)
