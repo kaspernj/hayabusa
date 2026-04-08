@@ -4,9 +4,7 @@ PATH
     hayabusa (0.0.30)
       baza (>= 0.0.38)
       datet
-      erubis
       http2
-      knjrbfw (>= 0.0.114)
       mail
       ruby_process
       tpool
@@ -19,6 +17,7 @@ GEM
     ast (2.4.3)
     auto_autoloader (0.0.5)
       string-cases
+    base64 (0.2.0)
     baza (0.0.38)
       array_enumerator (~> 0.0.10)
       auto_autoloader (~> 0.0.5)
@@ -30,7 +29,6 @@ GEM
     date (3.4.1)
     datet (0.0.25)
     diff-lcs (1.6.2)
-    erubis (2.7.0)
     event_handler (0.0.0)
     http2 (0.0.36)
       string-cases (~> 0)
@@ -140,9 +138,11 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  base64
   bundler (>= 1.0.0)
   hayabusa!
   json
+  knjrbfw
   php4r
   rmagick
   rspec (>= 2.3.0)
@@ -153,4 +153,4 @@ DEPENDENCIES
   sqlite3
 
 BUNDLED WITH
-   2.3.8
+   2.6.5
