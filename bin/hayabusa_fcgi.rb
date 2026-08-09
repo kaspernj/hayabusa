@@ -6,7 +6,7 @@
 error_log_file = "/tmp/hayabusa_fcgi.log"
 
 begin
-  File.unlink(error_log_file) if File.exists?(error_log_file)
+  File.unlink(error_log_file) if File.exist?(error_log_file)
 rescue Errno::ENOENT
   #ignore.
 end
@@ -15,14 +15,14 @@ begin
   require "rubygems"
   require "fcgi"
   require "fileutils"
-  
+
   #Try to load development-version to enable debugging without doing constant gem-installations.
   begin
     require "#{File.realpath(File.dirname(__FILE__))}/../../knjrbfw/lib/knjrbfw.rb"
   rescue LoadError
     require "knjrbfw"
   end
-  
+
   #Load 'Hayabusa' and start the FCGI-loop to begin handeling requests.
   require "#{File.dirname(Knj::Os.realpath(__FILE__))}/../lib/hayabusa.rb"
   fcgi = Hayabusa::Fcgi.new
@@ -36,7 +36,7 @@ rescue Exception => e
       fp.puts ""
     end
   end
-  
+
   #Just raise it normally as if a normal error occurred.
   raise e
 end

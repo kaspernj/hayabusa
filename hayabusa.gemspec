@@ -19,9 +19,8 @@ Gem::Specification.new do |s|
 
   s.add_dependency("baza", ">= 0.0.38")
   s.add_dependency("datet", ">= 0")
-  s.add_dependency("erubis", ">= 0")
   s.add_dependency("http2", ">= 0")
-  s.add_dependency("knjrbfw", ">= 0.0.114")
+  # s.add_dependency("knjrbfw", ">= 0.0.114")
   s.add_dependency("mail", ">= 0")
   s.add_dependency("ruby_process", ">= 0")
   s.add_dependency("tpool", ">= 0")
