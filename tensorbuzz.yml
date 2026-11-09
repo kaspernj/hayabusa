@@ -1,0 +1,56 @@
+rvm: true
+builds:
+  build_1:
+    environment:
+      RUBY_VERSION: 3.0.3
+    name: Ruby 3.0.3
+    paths:
+      - "**"
+      - "!bin/**"
+      - "!conf/**"
+      - "!Rakefile"
+      - "!README.md"
+      - "!LICENSE.txt"
+      - "!.document"
+      - "!.github/**"
+      - "!.gitignore"
+      - "!.rubocop.yml"
+      - "!.rubocop_todo.yml"
+    script:
+      - bundle exec rspec
+  build_2:
+    environment:
+      RUBY_VERSION: 3.1.7
+    name: Ruby 3.1.7
+    paths:
+      - "**"
+      - "!bin/**"
+      - "!conf/**"
+      - "!Rakefile"
+      - "!README.md"
+      - "!LICENSE.txt"
+      - "!.document"
+      - "!.github/**"
+      - "!.gitignore"
+      - "!.rubocop.yml"
+      - "!.rubocop_todo.yml"
+    script:
+      - bundle exec rspec
+  build_3:
+    name: Linters
+    paths:
+      - "**"
+      - "!conf/**"
+      - "!README.md"
+      - "!LICENSE.txt"
+      - "!.document"
+      - "!.github/**"
+      - "!.gitignore"
+      - "!.rspec"
+      - "!pages/**/*.rhtml"
+      - "!tests/**/*.rhtml"
+      - "!pages/*.png"
+      - "!pages/*.jpeg"
+      - "!spec/*.xlsx"
+    script:
+      - bundle exec rubocop
